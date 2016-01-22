@@ -26,9 +26,6 @@ public class SimplePostRequest extends ConnectRequest {
 
     /**
      * オンメモリのバッファをPOSTする
-     *
-     * @param contentType
-     * @param buffer
      */
     public void setPostBuffer(String contentType, byte[] buffer) {
         this.buffer = buffer;
@@ -37,10 +34,6 @@ public class SimplePostRequest extends ConnectRequest {
 
     /**
      * ローカルにあるファイルをPOSTする
-     *
-     * @param contentType
-     * @param file
-     * @throws IOException
      */
     public void setPostFile(String contentType, File file) throws IOException {
         if (!file.isFile() || file.length() <= 0) {

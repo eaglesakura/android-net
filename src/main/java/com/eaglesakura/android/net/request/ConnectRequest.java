@@ -43,8 +43,6 @@ public abstract class ConnectRequest {
 
     /**
      * 通信時のヘッダを取得する
-     *
-     * @return
      */
     public HttpHeader getHeader() {
         return header;
@@ -52,8 +50,6 @@ public abstract class ConnectRequest {
 
     /**
      * タイムアウト時間を指定する
-     *
-     * @param readTimeoutMs
      */
     public void setReadTimeoutMs(long readTimeoutMs) {
         this.readTimeoutMs = readTimeoutMs;
@@ -74,16 +70,12 @@ public abstract class ConnectRequest {
     /**
      * キャッシュ制御を取得する
      * nullを返却した場合、キャッシュ制御を行わない
-     *
-     * @return
      */
     public abstract CachePolicy getCachePolicy();
 
     /**
      * リトライ制御を取得する
      * nullを返却した場合、リトライ制御を行わない。
-     *
-     * @return
      */
     public abstract RetryPolicy getRetryPolicy();
 
@@ -91,8 +83,6 @@ public abstract class ConnectRequest {
      * POST時のBodyを取得する
      * <p/>
      * nullを返却した場合、POST時に何もデータを付与しない。
-     *
-     * @return
      */
     public abstract ConnectContent getContent();
 }

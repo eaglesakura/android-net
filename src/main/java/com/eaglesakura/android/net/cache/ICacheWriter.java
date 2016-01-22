@@ -15,21 +15,16 @@ public interface ICacheWriter extends Closeable {
      * @param buffer 書き込み対象バッファ
      * @param offset バッファの使用位置
      * @param length バッファの長さ
-     * @throws IOException
      */
     void write(byte[] buffer, int offset, int length) throws IOException;
 
     /**
      * キャッシュの登録を完了した
-     *
-     * @throws IOException
      */
     void commit() throws IOException;
 
     /**
      * キャッシュ登録中に問題が発生したため、エントリーの削除を行わせる
-     *
-     * @throws IOException
      */
     void abort() throws IOException;
 }

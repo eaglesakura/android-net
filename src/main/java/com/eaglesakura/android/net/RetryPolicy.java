@@ -55,10 +55,6 @@ public class RetryPolicy {
 
     /**
      * 次のバックオフ時間を取得する
-     *
-     * @param retryNum
-     * @param currentBackoff
-     * @return
      */
     public long nextBackoffTimeMs(int retryNum, long currentBackoff) {
         float result = (float) currentBackoff;

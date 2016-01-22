@@ -4,19 +4,15 @@ import com.eaglesakura.android.net.HttpHeader;
 import com.eaglesakura.android.net.cache.CachePolicy;
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.ICacheWriter;
-import com.eaglesakura.android.net.cache.file.FileCacheWriter;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.util.EncodeUtil;
 import com.eaglesakura.util.IOUtil;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * 指定ディレクトリ配下でファイルとしてキャッシュを制御する
@@ -37,8 +33,6 @@ public class FileCacheController implements ICacheController {
      * キャッシュ拡張子を指定する。
      * <p/>
      * 拡張子は"."を除いた文字列を指定する
-     *
-     * @param ext
      */
     public void setExt(String ext) {
         this.ext = ext;

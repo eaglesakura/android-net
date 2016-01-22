@@ -1,10 +1,10 @@
 package com.eaglesakura.android.net.parser;
 
-import android.graphics.Bitmap;
-
 import com.eaglesakura.android.net.Connection;
 import com.eaglesakura.android.thread.async.AsyncTaskResult;
 import com.eaglesakura.android.util.ImageUtil;
+
+import android.graphics.Bitmap;
 
 import java.io.InputStream;
 

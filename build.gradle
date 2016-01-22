@@ -35,12 +35,12 @@ android {
 
 dependencies {
 //    compile 'com.eaglesakura:simple-logger:+'
-    compile 'com.eaglesakura:simple-utils:+'
+    compile 'com.eaglesakura:simple-utils:1.0.+'
 //    compile 'com.eaglesakura:simple-serialize:+'
-    compile 'com.eaglesakura:json-wrapper:+'
-    compile 'com.eaglesakura:android-text-kvs:+'
-    compile 'com.eaglesakura:android-thread:+'
-    compile 'com.eaglesakura:android-simple-utils:+'
+    compile 'com.eaglesakura:json-wrapper:1.0.+'
+    compile 'com.eaglesakura:android-text-kvs:1.0.+'
+    compile 'com.eaglesakura:android-thread:1.0.+'
+    compile 'com.eaglesakura:android-simple-utils:1.0.+'
     /**
      * Network
      */

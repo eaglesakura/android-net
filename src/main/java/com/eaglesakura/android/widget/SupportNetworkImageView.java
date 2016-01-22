@@ -1,16 +1,8 @@
 package com.eaglesakura.android.widget;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.util.AttributeSet;
-import android.widget.ImageView;
-
-import com.eaglesakura.android.net.R;
 import com.eaglesakura.android.net.NetworkConnector;
 import com.eaglesakura.android.net.NetworkResult;
+import com.eaglesakura.android.net.R;
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.file.FileCacheController;
 import com.eaglesakura.android.net.parser.RequestParser;
@@ -18,6 +10,14 @@ import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.android.net.request.SimpleHttpRequest;
 import com.eaglesakura.android.thread.async.AsyncTaskResult;
 import com.eaglesakura.util.LogUtil;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.util.AttributeSet;
+import android.widget.ImageView;
 
 import java.io.File;
 
@@ -103,8 +103,6 @@ public class SupportNetworkImageView extends ImageView {
 
     /**
      * ネットワークキャッシュが有効な時間を設定する
-     *
-     * @param cacheTimeoutMs
      */
     public void setCacheTimeoutMs(long cacheTimeoutMs) {
         this.cacheTimeoutMs = cacheTimeoutMs;
@@ -121,9 +119,6 @@ public class SupportNetworkImageView extends ImageView {
 
     /**
      * ネットワーク経由でgetする
-     *
-     * @param getUrl
-     * @param parser
      */
     public void setImageFromNetwork(final String getUrl, RequestParser<Bitmap> parser) {
         this.url = getUrl;

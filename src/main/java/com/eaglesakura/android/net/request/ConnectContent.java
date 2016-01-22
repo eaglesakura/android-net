@@ -14,8 +14,6 @@ public abstract class ConnectContent {
      * コンテンツの長さを取得する。
      * <p/>
      * 0の場合、このコンテンツは無視される。
-     *
-     * @return
      */
     public abstract long getLength();
 
@@ -25,9 +23,6 @@ public abstract class ConnectContent {
      * closeは自動的に行われる。
      * <p/>
      * リトライによって、複数回呼び出される可能性がある。
-     *
-     * @return
-     * @throws IOException
      */
     public abstract InputStream openStream() throws IOException;
 
@@ -35,8 +30,6 @@ public abstract class ConnectContent {
      * MIMEを取得する。
      * <p/>
      * applicatin/json等
-     *
-     * @return
      */
     public abstract String getContentType();
 }

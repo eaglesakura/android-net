@@ -2,7 +2,6 @@ package com.eaglesakura.android.net.stream;
 
 import com.eaglesakura.android.net.Connection;
 import com.eaglesakura.android.net.HttpHeader;
-import com.eaglesakura.android.thread.async.AsyncTaskResult;
 import com.eaglesakura.android.thread.async.error.TaskException;
 
 import java.io.IOException;
@@ -22,10 +21,6 @@ public interface IStreamController {
      * 内部的にByteArrayに変換する等のラップを行う。
      * <p/>
      * 内部でoriginalStreamを閉じる必要はない。
-     *
-     * @param respHeader
-     * @param originalStream
-     * @return
      */
     <T> InputStream wrapStream(Connection<T> connection, HttpHeader respHeader, InputStream originalStream) throws IOException, TaskException;
 }

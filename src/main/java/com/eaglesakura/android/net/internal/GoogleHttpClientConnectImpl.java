@@ -1,17 +1,5 @@
 package com.eaglesakura.android.net.internal;
 
-import com.eaglesakura.android.net.HttpHeader;
-import com.eaglesakura.android.net.NetworkConnector;
-import com.eaglesakura.android.net.cache.ICacheWriter;
-import com.eaglesakura.android.net.request.ConnectContent;
-import com.eaglesakura.android.net.request.ConnectRequest;
-import com.eaglesakura.android.net.parser.RequestParser;
-import com.eaglesakura.android.thread.async.AsyncTaskResult;
-import com.eaglesakura.android.thread.async.error.TaskCanceledException;
-import com.eaglesakura.android.thread.async.error.TaskException;
-import com.eaglesakura.android.thread.async.error.TaskFailedException;
-import com.eaglesakura.util.IOUtil;
-import com.eaglesakura.util.LogUtil;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -20,6 +8,19 @@ import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
+
+import com.eaglesakura.android.net.HttpHeader;
+import com.eaglesakura.android.net.NetworkConnector;
+import com.eaglesakura.android.net.cache.ICacheWriter;
+import com.eaglesakura.android.net.parser.RequestParser;
+import com.eaglesakura.android.net.request.ConnectContent;
+import com.eaglesakura.android.net.request.ConnectRequest;
+import com.eaglesakura.android.thread.async.AsyncTaskResult;
+import com.eaglesakura.android.thread.async.error.TaskCanceledException;
+import com.eaglesakura.android.thread.async.error.TaskException;
+import com.eaglesakura.android.thread.async.error.TaskFailedException;
+import com.eaglesakura.util.IOUtil;
+import com.eaglesakura.util.LogUtil;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

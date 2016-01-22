@@ -19,10 +19,6 @@ public interface ICacheController {
      * キャッシュ登録を行うためのインターフェースを取得する。
      * <p/>
      * 不正な場合は例外を投げる。
-     *
-     * @param request
-     * @param respHeader
-     * @return
      */
     ICacheWriter newCacheWriter(ConnectRequest request, HttpHeader respHeader) throws IOException;
 
@@ -30,9 +26,6 @@ public interface ICacheController {
      * 既存のキャッシュを開く。
      * <p/>
      * キャッシュがない場合、FileNotFoundExceptionを投げる。
-     *
-     * @param request
-     * @return
      */
     InputStream openCache(ConnectRequest request) throws IOException;
 }

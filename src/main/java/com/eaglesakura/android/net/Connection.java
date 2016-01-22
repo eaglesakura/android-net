@@ -8,29 +8,21 @@ import com.eaglesakura.util.StringUtil;
 public abstract class Connection<T> implements IAsyncTask<T> {
     /**
      * キャッシュの指紋を取得する
-     *
-     * @return
      */
     public abstract String getCacheDigest();
 
     /**
      * コンテンツの指紋を取得する
-     *
-     * @return
      */
     public abstract String getContentDigest();
 
     /**
      * キャッシュ制御を取得する
-     *
-     * @return
      */
     public abstract ICacheController getCacheController();
 
     /**
      * リクエスト情報を取得する
-     *
-     * @return
      */
     public abstract ConnectRequest getRequest();
 
@@ -45,8 +37,6 @@ public abstract class Connection<T> implements IAsyncTask<T> {
      * コンテンツを何らかの手段で取得済みであればtrue
      *
      * キャッシュロードした場合もtrueを返却する。
-     *
-     * @return
      */
     public boolean hasContent() {
         return getContentDigest() != null || getCacheDigest() != null;
@@ -54,8 +44,6 @@ public abstract class Connection<T> implements IAsyncTask<T> {
 
     /**
      * コンテンツがキャッシュと切り替わっていたらtrueを返却する
-     *
-     * @return
      */
     public boolean isContentModified() {
         String cache = getCacheDigest();

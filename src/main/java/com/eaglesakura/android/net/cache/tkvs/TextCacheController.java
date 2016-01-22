@@ -1,7 +1,5 @@
 package com.eaglesakura.android.net.cache.tkvs;
 
-import android.content.Context;
-
 import com.eaglesakura.android.db.DBOpenType;
 import com.eaglesakura.android.db.TextKeyValueStore;
 import com.eaglesakura.android.net.HttpHeader;
@@ -10,6 +8,8 @@ import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.ICacheWriter;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.util.StringUtil;
+
+import android.content.Context;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -77,8 +77,6 @@ public class TextCacheController implements ICacheController {
 
     /**
      * base64エンコードを行う場合true
-     *
-     * @param encodeBase64
      */
     public void setEncodeBase64(boolean encodeBase64) {
         this.encodeBase64 = encodeBase64;

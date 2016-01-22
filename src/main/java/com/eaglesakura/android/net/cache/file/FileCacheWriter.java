@@ -31,8 +31,6 @@ public class FileCacheWriter implements ICacheWriter {
 
     /**
      * 正常に書き込めたら、一時ファイルを正式ファイルにリネームする
-     *
-     * @throws IOException
      */
     @Override
     public void commit() throws IOException {
@@ -45,8 +43,6 @@ public class FileCacheWriter implements ICacheWriter {
 
     /**
      * 廃棄するなら、tempファイルを削除する
-     *
-     * @throws IOException
      */
     @Override
     public void abort() throws IOException {

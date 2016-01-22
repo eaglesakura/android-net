@@ -6,8 +6,8 @@ import com.eaglesakura.android.net.NetworkConnector;
 import com.eaglesakura.android.net.RetryPolicy;
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.ICacheWriter;
-import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.android.net.parser.RequestParser;
+import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.android.net.stream.IStreamController;
 import com.eaglesakura.android.thread.async.AsyncTaskResult;
 import com.eaglesakura.android.thread.async.error.TaskCanceledException;
@@ -82,11 +82,6 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
     /**
      * ネットワーク経由のInputStreamからパースを行う
      * ストリームのcloseは外部に任せる
-     *
-     * @param stream
-     * @param digest
-     * @return
-     * @throws Exception
      */
     protected T parseFromStream(AsyncTaskResult<T> taskResult, HttpHeader respHeader, InputStream stream, ICacheWriter cacheWriter, MessageDigest digest) throws Exception {
         // コンテンツをラップする
@@ -143,9 +138,6 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
 
     /**
      * キャッシュからデータをパースする
-     *
-     * @param taskResult
-     * @return
      */
     private T tryCacheParse(AsyncTaskResult<T> taskResult) {
         ICacheController controller = connector.getCacheController();
@@ -174,9 +166,6 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
 
     /**
      * 接続を行う
-     *
-     * @return
-     * @throws IOException
      */
     protected abstract T tryNetworkParse(AsyncTaskResult<T> result, MessageDigest digest) throws IOException, TaskException;
 

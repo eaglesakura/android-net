@@ -25,10 +25,6 @@ public class HttpHeader {
 
     /**
      * コンテンツのRangeを指定してダウンロードする。
-     *
-     * @param offset
-     * @param length
-     * @return
      */
     public HttpHeader range(long offset, long length) {
         String result = String.format("bytes=%d-%d", offset, (offset + length - 1));
@@ -38,8 +34,6 @@ public class HttpHeader {
 
     /**
      * ダウンロードするコンテンツの最大サイズを取得する。
-     *
-     * @return
      */
     public long getContentFullSize() {
         String range = values.get(HEADER_CONTENT_RANGE);
@@ -60,9 +54,6 @@ public class HttpHeader {
 
     /**
      * ヘッダを取得する
-     *
-     * @param key
-     * @return
      */
     public String get(String key) {
         return values.get(key);

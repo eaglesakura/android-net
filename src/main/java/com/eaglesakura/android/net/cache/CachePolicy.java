@@ -21,8 +21,6 @@ public class CachePolicy {
 
     /**
      * キャッシュに登録する最大バイトサイズを取得する
-     *
-     * @return
      */
     public long getMaxItemBytes() {
         return maxItemBytes;
@@ -30,8 +28,6 @@ public class CachePolicy {
 
     /**
      * キャッシュに登録する最大バイトサイズ指定
-     *
-     * @param maxItemBytes
      */
     public void setMaxItemBytes(long maxItemBytes) {
         this.maxItemBytes = maxItemBytes;
@@ -39,8 +35,6 @@ public class CachePolicy {
 
     /**
      * キャッシュとして有効な最大時間を取得する
-     *
-     * @return
      */
     public long getCacheLimitTimeMs() {
         return cacheLimitTimeMs;
@@ -48,8 +42,6 @@ public class CachePolicy {
 
     /**
      * キャッシュとして有効な最大時間を指定する
-     *
-     * @return
      */
     public void setCacheLimitTimeMs(long cacheLimitTimeMs) {
         this.cacheLimitTimeMs = cacheLimitTimeMs;
@@ -59,9 +51,6 @@ public class CachePolicy {
      * キャッシュのキーとなる文字列を生成する。
      * <p/>
      * 基本的にはメソッド＋URLで生成される。
-     *
-     * @param request
-     * @return
      */
     public String getCacheKey(ConnectRequest request) {
         return String.format("%s/%s", request.getMethod().toString(), request.getUrl());
