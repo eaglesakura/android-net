@@ -32,13 +32,24 @@ android {
         targetSdkVersion 23
     }
 }
-
+// Local or maven
+if (!hasProperty("EGLIBRARY_COMPILE_LOCAL")) {
+    ext.EGLIBRARY_COMPILE_LOCAL = false
+}
 dependencies {
-    compile 'com.eaglesakura:simple-utils:1.0.+'
-    compile 'com.eaglesakura:json-wrapper:1.0.+'
-    compile 'com.eaglesakura:android-text-kvs:1.0.+'
-    compile 'com.eaglesakura:android-thread:1.0.+'
-    compile 'com.eaglesakura:android-simple-utils:1.0.+'
+    if (EGLIBRARY_COMPILE_LOCAL) {
+        compile project(':eglibrary:simple-utils')
+        compile project(':eglibrary:json-wrapper')
+        compile project(':eglibrary:android-text-kvs')
+        compile project(':eglibrary:android-thread')
+        compile project(':eglibrary:android-simple-utils')
+    } else {
+        compile 'com.eaglesakura:simple-utils:1.0.+'
+        compile 'com.eaglesakura:json-wrapper:1.0.+'
+        compile 'com.eaglesakura:android-text-kvs:1.0.+'
+        compile 'com.eaglesakura:android-thread:1.0.+'
+        compile 'com.eaglesakura:android-simple-utils:1.0.+'
+    }
 
     /**
      * Network Library
