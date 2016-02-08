@@ -167,7 +167,7 @@ public class GoogleHttpClientConnectImpl<T> extends BaseHttpConnection<T> {
             respHeader = wrapHeader(resp.getHeaders());
             final int status = resp.getStatusCode();
 
-            if (taskResult.isCanceled()) {
+            if (taskResult.isCanceledTask()) {
                 throw new TaskCanceledException();
             }
 

@@ -26,7 +26,7 @@ public class NetworkParseInputStream extends DigestInputStream {
     }
 
     private void throwIfCanceled() throws IOException {
-        if (taskResult.isCanceled()) {
+        if (taskResult.isCanceledTask()) {
             throw new IOException("Canceled Task Stream");
         }
     }

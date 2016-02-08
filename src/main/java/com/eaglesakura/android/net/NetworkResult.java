@@ -38,7 +38,7 @@ public class NetworkResult<T> {
     }
 
     public boolean isCanceled() {
-        return taskResult.isCanceled();
+        return taskResult.isCanceledTask();
     }
 
     public void setCancelSignal(AsyncTaskResult.CancelSignal cancelSignal) {
