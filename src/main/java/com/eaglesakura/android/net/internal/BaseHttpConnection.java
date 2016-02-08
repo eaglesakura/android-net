@@ -209,10 +209,10 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
             {
                 waitTimer.start();
                 // キャンセルされてない、かつウェイト時間が残っていたら眠らせる
-                while (!result.isCanceled() && (waitTimer.end() < waitTime)) {
+                while (!result.isCanceledTask() && (waitTimer.end() < waitTime)) {
                     Util.sleep(1);
                 }
-                if (result.isCanceled()) {
+                if (result.isCanceledTask()) {
                     throw new TaskCanceledException();
                 }
             }
@@ -232,7 +232,7 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
             return parsed;
         }
 
-        if (result.isCanceled()) {
+        if (result.isCanceledTask()) {
             return null;
         }
 
