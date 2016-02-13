@@ -46,11 +46,11 @@ dependencies {
         compile project(':eglibrary:android-thread')
         compile project(':eglibrary:android-simple-utils')
     } else {
-        compile 'com.eaglesakura:simple-utils:1.0.+'
-        compile 'com.eaglesakura:json-wrapper:1.0.+'
-        compile 'com.eaglesakura:android-text-kvs:1.0.+'
-        compile 'com.eaglesakura:android-thread:1.0.+'
-        compile 'com.eaglesakura:android-simple-utils:1.0.+'
+        compile 'com.eaglesakura:simple-utils:1.+'
+        compile 'com.eaglesakura:json-wrapper:1.+'
+        compile 'com.eaglesakura:android-text-kvs:1.+'
+        compile 'com.eaglesakura:android-thread:1.+'
+        compile 'com.eaglesakura:android-simple-utils:1.+'
     }
 
     /**
