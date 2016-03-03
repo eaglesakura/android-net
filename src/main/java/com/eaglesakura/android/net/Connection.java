@@ -2,10 +2,9 @@ package com.eaglesakura.android.net;
 
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.request.ConnectRequest;
-import com.eaglesakura.android.thread.async.IAsyncTask;
 import com.eaglesakura.util.StringUtil;
 
-public abstract class Connection<T> implements IAsyncTask<T> {
+public abstract class Connection<T> {
     /**
      * キャッシュの指紋を取得する
      */
@@ -25,6 +24,11 @@ public abstract class Connection<T> implements IAsyncTask<T> {
      * リクエスト情報を取得する
      */
     public abstract ConnectRequest getRequest();
+
+    /**
+     * parseされた戻り値を取得する
+     */
+    public abstract T getResult();
 
     /**
      * キャッシュを取得済みであればtrue

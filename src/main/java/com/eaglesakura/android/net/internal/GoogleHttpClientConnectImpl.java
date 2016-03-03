@@ -15,10 +15,9 @@ import com.eaglesakura.android.net.cache.ICacheWriter;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectContent;
 import com.eaglesakura.android.net.request.ConnectRequest;
-import com.eaglesakura.android.thread.async.AsyncTaskResult;
-import com.eaglesakura.android.thread.async.error.TaskCanceledException;
-import com.eaglesakura.android.thread.async.error.TaskException;
-import com.eaglesakura.android.thread.async.error.TaskFailedException;
+import com.eaglesakura.android.rx.RxTask;
+import com.eaglesakura.android.rx.error.RxTaskException;
+import com.eaglesakura.android.rx.error.TaskCanceledException;
 import com.eaglesakura.util.IOUtil;
 import com.eaglesakura.util.LogUtil;
 
@@ -148,7 +147,7 @@ public class GoogleHttpClientConnectImpl<T> extends BaseHttpConnection<T> {
     }
 
     @Override
-    protected T tryNetworkParse(AsyncTaskResult<T> taskResult, MessageDigest digest) throws IOException, TaskException {
+    protected T tryNetworkParse(RxTask taskResult, MessageDigest digest) throws IOException, RxTaskException {
         HttpRequest req;
         HttpResponse resp = null;
         InputStream readContent = null;
@@ -167,7 +166,7 @@ public class GoogleHttpClientConnectImpl<T> extends BaseHttpConnection<T> {
             respHeader = wrapHeader(resp.getHeaders());
             final int status = resp.getStatusCode();
 
-            if (taskResult.isCanceledTask()) {
+            if (taskResult.isCanceled()) {
                 throw new TaskCanceledException();
             }
 
@@ -186,10 +185,8 @@ public class GoogleHttpClientConnectImpl<T> extends BaseHttpConnection<T> {
                 return result;
             } catch (IOException e) {
                 throw e;
-            } catch (TaskException e) {
-                throw e;
             } catch (Exception e) {
-                throw new TaskFailedException(e);
+                throw new IllegalStateException(e);
             } finally {
                 if (result == null) {
                     LogUtil.log("parse failed");

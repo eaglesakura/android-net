@@ -1,14 +1,16 @@
 package com.eaglesakura.android.widget;
 
+import com.eaglesakura.android.net.Connection;
 import com.eaglesakura.android.net.NetworkConnector;
-import com.eaglesakura.android.net.NetworkResult;
 import com.eaglesakura.android.net.R;
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.file.FileCacheController;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.android.net.request.SimpleHttpRequest;
-import com.eaglesakura.android.thread.async.AsyncTaskResult;
+import com.eaglesakura.android.rx.LifecycleState;
+import com.eaglesakura.android.rx.RxTask;
+import com.eaglesakura.android.rx.SubscriptionController;
 import com.eaglesakura.util.LogUtil;
 
 import android.annotation.SuppressLint;
@@ -21,15 +23,17 @@ import android.widget.ImageView;
 
 import java.io.File;
 
+import rx.subjects.BehaviorSubject;
+
 /**
  * Support Network ImageView
  */
 public class SupportNetworkImageView extends ImageView {
     protected String url;
 
-    protected NetworkConnector connector;
+    protected NetworkConnector mConnector;
 
-    protected NetworkResult<Bitmap> imageResult;
+    protected RxTask<Connection<Bitmap>> imageResult;
 
     /**
      * ダウンロード失敗時に表示する画像
@@ -42,6 +46,10 @@ public class SupportNetworkImageView extends ImageView {
     protected long cacheTimeoutMs;
 
     protected OnImageListener onImageListener;
+
+    protected BehaviorSubject<LifecycleState> mSubject = BehaviorSubject.create(LifecycleState.NewObject);
+
+    protected SubscriptionController mSubscription = new SubscriptionController();
 
     public SupportNetworkImageView(Context context) {
         super(context);
@@ -69,13 +77,14 @@ public class SupportNetworkImageView extends ImageView {
             return;
         }
 
-        connector = NetworkConnector.newDefaultConnector(context, 2);
+        mSubscription.bind(mSubject);
+        mConnector = new NetworkConnector(context);
         try {
             FileCacheController ctrl = new FileCacheController(new File(getContext().getCacheDir(), "net-img"));
             ctrl.setExt("img");
-            connector.setCacheController(ctrl);
+            mConnector.setCacheController(ctrl);
         } catch (Exception e) {
-            connector.setCacheController(null);
+            mConnector.setCacheController(null);
         }
 
         if (attrs != null) {
@@ -99,6 +108,18 @@ public class SupportNetworkImageView extends ImageView {
         }
 
         LogUtil.log("Cache time(%.2f hour) ErrorImage (%s)", (double) cacheTimeoutMs / (double) ICacheController.CACHE_ONE_HOUR, "" + errorImage);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mSubject.onNext(LifecycleState.OnResumed);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mSubject.onNext(LifecycleState.OnDestroyed);
     }
 
     /**
@@ -126,37 +147,40 @@ public class SupportNetworkImageView extends ImageView {
         SimpleHttpRequest request = new SimpleHttpRequest(ConnectRequest.Method.GET);
         request.setUrl(getUrl, null);
         request.getCachePolicy().setCacheLimitTimeMs(cacheTimeoutMs);
-        if (imageResult != null) {
-            imageResult.setListener(null);
-        }
-        imageResult = connector.connect(request, parser);
-        imageResult.setListener(new AsyncTaskResult.Listener<Bitmap>() {
-            @Override
-            public void onTaskCompleted(AsyncTaskResult<Bitmap> task, Bitmap result) {
-                if (getUrl.equals(url)) {
-                    try {
-                        onReceivedImage(result);
-                    } catch (Exception e) {
+        imageResult = mConnector.connect(mSubscription, request, parser)
+                .cancelSignal(new RxTask.Signal() {
+                    @Override
+                    public boolean is(RxTask task) {
+                        return task != imageResult;
+                    }
+                })
+                .completed(new RxTask.Action1<Connection<Bitmap>>() {
+                    @Override
+                    public void call(Connection<Bitmap> it, RxTask<Connection<Bitmap>> task) {
+                        if (task == imageResult) {
+                            try {
+                                onReceivedImage(it.getResult());
+                            } catch (Exception e) {
+                                onImageLoadError();
+                            }
+                        }
+                    }
+                }).canceled(new RxTask.Action0<Connection<Bitmap>>() {
+                    @Override
+                    public void call(RxTask<Connection<Bitmap>> task) {
                         onImageLoadError();
                     }
-                }
-            }
-
-            @Override
-            public void onTaskCanceled(AsyncTaskResult<Bitmap> task) {
-                onImageLoadError();
-            }
-
-            @Override
-            public void onTaskFailed(AsyncTaskResult<Bitmap> task, Exception error) {
-                onImageLoadError();
-            }
-
-            @Override
-            public void onTaskFinalize(AsyncTaskResult<Bitmap> task) {
-                imageResult = null;
-            }
-        });
+                }).failed(new RxTask.ErrorAction<Connection<Bitmap>>() {
+                    @Override
+                    public void call(Throwable it, RxTask<Connection<Bitmap>> task) {
+                        onImageLoadError();
+                    }
+                }).finalized(new RxTask.Action0<Connection<Bitmap>>() {
+                    @Override
+                    public void call(RxTask<Connection<Bitmap>> task) {
+                        imageResult = null;
+                    }
+                }).start();
     }
 
     public void setOnImageListener(OnImageListener onImageListener) {

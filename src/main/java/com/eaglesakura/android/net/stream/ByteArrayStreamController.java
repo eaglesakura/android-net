@@ -2,7 +2,7 @@ package com.eaglesakura.android.net.stream;
 
 import com.eaglesakura.android.net.Connection;
 import com.eaglesakura.android.net.HttpHeader;
-import com.eaglesakura.android.thread.async.error.TaskException;
+import com.eaglesakura.android.rx.error.RxTaskException;
 import com.eaglesakura.util.IOUtil;
 
 import java.io.ByteArrayInputStream;
@@ -15,7 +15,7 @@ import java.io.InputStream;
 public class ByteArrayStreamController implements IStreamController {
 
     @Override
-    public <T> InputStream wrapStream(Connection<T> connection, HttpHeader respHeader, InputStream originalStream) throws IOException, TaskException {
+    public <T> InputStream wrapStream(Connection<T> connection, HttpHeader respHeader, InputStream originalStream) throws IOException, RxTaskException {
         byte[] buffer = IOUtil.toByteArray(originalStream, false);
         return new ByteArrayInputStream(buffer);
     }

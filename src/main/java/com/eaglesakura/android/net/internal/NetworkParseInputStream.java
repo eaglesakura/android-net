@@ -1,13 +1,16 @@
 package com.eaglesakura.android.net.internal;
 
 import com.eaglesakura.android.net.cache.ICacheWriter;
-import com.eaglesakura.android.thread.async.AsyncTaskResult;
+import com.eaglesakura.android.rx.RxTask;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 
+/**
+ * ネットワーク用StreamをラップするためのInputStream
+ */
 public class NetworkParseInputStream extends DigestInputStream {
     /**
      * 一度に読み込みを許可する最大容量。
@@ -15,27 +18,27 @@ public class NetworkParseInputStream extends DigestInputStream {
      */
     private static final int MAX_READ_BYTES = 1024 * 4;
 
-    final AsyncTaskResult taskResult;
+    final RxTask mTaskResult;
 
-    final ICacheWriter cacheWriter;
+    final ICacheWriter mCacheWriter;
 
-    public NetworkParseInputStream(InputStream stream, ICacheWriter cacheWriter, MessageDigest digest, AsyncTaskResult taskResult) {
+    public NetworkParseInputStream(InputStream stream, ICacheWriter cacheWriter, MessageDigest digest, RxTask taskResult) {
         super(stream, digest);
-        this.taskResult = taskResult;
-        this.cacheWriter = cacheWriter;
+        this.mTaskResult = taskResult;
+        this.mCacheWriter = cacheWriter;
     }
 
     private void throwIfCanceled() throws IOException {
-        if (taskResult.isCanceledTask()) {
+        if (mTaskResult.isCanceled()) {
             throw new IOException("Canceled Task Stream");
         }
     }
 
     private void writeCache(byte[] buffer, int offset, int length) throws IOException {
-        if (cacheWriter == null || length <= 0) {
+        if (mCacheWriter == null || length <= 0) {
             return;
         } else {
-            cacheWriter.write(buffer, offset, length);
+            mCacheWriter.write(buffer, offset, length);
         }
     }
 
@@ -43,7 +46,7 @@ public class NetworkParseInputStream extends DigestInputStream {
     public int read() throws IOException {
         throwIfCanceled();
         int result = in.read();
-        cacheWriter.write(new byte[]{(byte) result}, 0, 1);
+        mCacheWriter.write(new byte[]{(byte) result}, 0, 1);
         return result;
     }
 

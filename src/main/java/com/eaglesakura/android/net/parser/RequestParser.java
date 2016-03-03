@@ -2,7 +2,7 @@ package com.eaglesakura.android.net.parser;
 
 
 import com.eaglesakura.android.net.Connection;
-import com.eaglesakura.android.thread.async.AsyncTaskResult;
+import com.eaglesakura.android.rx.RxTask;
 
 import java.io.InputStream;
 
@@ -10,5 +10,5 @@ import java.io.InputStream;
  * オブジェクトのパースを行う
  */
 public interface RequestParser<T> {
-    T parse(Connection<T> sender, AsyncTaskResult<T> taskResult, InputStream data) throws Exception;
+    T parse(Connection<T> sender, RxTask task, InputStream data) throws Exception;
 }

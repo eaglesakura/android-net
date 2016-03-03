@@ -2,12 +2,15 @@ package com.eaglesakura.android.net;
 
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.tkvs.TextCacheController;
+import com.eaglesakura.android.net.internal.BaseHttpConnection;
 import com.eaglesakura.android.net.internal.GoogleHttpClientConnectImpl;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
-import com.eaglesakura.android.net.stream.BufferdStreamController;
 import com.eaglesakura.android.net.stream.IStreamController;
-import com.eaglesakura.android.thread.async.AsyncTaskController;
+import com.eaglesakura.android.net.stream.RawStreamController;
+import com.eaglesakura.android.rx.RxTask;
+import com.eaglesakura.android.rx.RxTaskBuilder;
+import com.eaglesakura.android.rx.SubscriptionController;
 
 import android.content.Context;
 
@@ -18,27 +21,26 @@ import android.content.Context;
  * 同期的に結果を得たい場合はawait()でタスク待ちを行えば良い。
  */
 public class NetworkConnector {
-    private final Context context;
+    private final Context mContext;
 
     private IStreamController streamController;
 
     private ICacheController cacheController;
 
-    private AsyncTaskController taskController;
+    private SubscriptionController mSubscriptionController;
 
     public NetworkConnector(Context context) {
-        this.context = context.getApplicationContext();
+        mContext = context.getApplicationContext();
+        streamController = new RawStreamController();
+        cacheController = new TextCacheController(mContext);
     }
 
     public Context getContext() {
-        return context;
+        return mContext;
     }
 
-    /**
-     * 通信スレッド数を指定する
-     */
-    public void setThreadNum(int threads) {
-        taskController = new AsyncTaskController(threads, 1000 * 5);
+    public void setSubscriptionController(SubscriptionController subscriptionController) {
+        mSubscriptionController = subscriptionController;
     }
 
     public void setStreamController(IStreamController streamController) {
@@ -58,38 +60,23 @@ public class NetworkConnector {
     }
 
     /**
-     * 接続を行う
-     */
-    public <T> NetworkResult<T> connect(ConnectRequest request, RequestParser<T> parser) {
-        GoogleHttpClientConnectImpl connect = new GoogleHttpClientConnectImpl(this, request, parser);
-        return new NetworkResult<>(connect, taskController.pushBack(connect));
-    }
-
-    /**
-     * 小さいデータ処理に使用するシンプルなコネクタを生成する
-     */
-    public static NetworkConnector newDefaultConnector(Context context) {
-        return newDefaultConnector(context, 3);
-    }
-
-
-    /**
-     * 小さいデータ処理に使用するシンプルなコネクタを生成する
+     * 外部接続を行う
      *
-     * @param maxThreads 通信を行う最大スレッド数
+     * @param subscription スレッド制御クラス
+     * @param request      通信リクエスト
+     * @param parser       通信パーサ
+     * @param <T>          戻り値の型
+     * @return 実行タスク
      */
-    public static NetworkConnector newDefaultConnector(Context context, int maxThreads) {
-        NetworkConnector result = new NetworkConnector(context);
+    public <T> RxTaskBuilder<Connection<T>> connect(SubscriptionController subscription, ConnectRequest request, RequestParser<T> parser) {
+        final BaseHttpConnection<T> connection = new GoogleHttpClientConnectImpl<>(this, request, parser);
 
-        result.setThreadNum(maxThreads);
-        {
-            result.setStreamController(new BufferdStreamController(1024 * 4));
-        }
-        {
-            TextCacheController cacheController = new TextCacheController(context);
-            cacheController.setEncodeBase64(true);
-            result.setCacheController(cacheController);
-        }
-        return result;
+        return new RxTaskBuilder<Connection<T>>(subscription).async(new RxTask.Async<Connection<T>>() {
+            @Override
+            public Connection<T> call(RxTask<Connection<T>> task) throws Throwable {
+                connection.connect(task);
+                return connection;
+            }
+        });
     }
 }

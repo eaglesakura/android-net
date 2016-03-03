@@ -2,7 +2,7 @@ package com.eaglesakura.android.net.stream;
 
 import com.eaglesakura.android.net.Connection;
 import com.eaglesakura.android.net.HttpHeader;
-import com.eaglesakura.android.thread.async.error.TaskException;
+import com.eaglesakura.android.rx.error.RxTaskException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,5 +22,5 @@ public interface IStreamController {
      * <p/>
      * 内部でoriginalStreamを閉じる必要はない。
      */
-    <T> InputStream wrapStream(Connection<T> connection, HttpHeader respHeader, InputStream originalStream) throws IOException, TaskException;
+    <T> InputStream wrapStream(Connection<T> connection, HttpHeader respHeader, InputStream originalStream) throws IOException, RxTaskException;
 }

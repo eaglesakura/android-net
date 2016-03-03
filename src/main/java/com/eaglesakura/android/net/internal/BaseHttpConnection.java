@@ -9,9 +9,9 @@ import com.eaglesakura.android.net.cache.ICacheWriter;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.android.net.stream.IStreamController;
-import com.eaglesakura.android.thread.async.AsyncTaskResult;
-import com.eaglesakura.android.thread.async.error.TaskCanceledException;
-import com.eaglesakura.android.thread.async.error.TaskException;
+import com.eaglesakura.android.rx.RxTask;
+import com.eaglesakura.android.rx.error.RxTaskException;
+import com.eaglesakura.android.rx.error.TaskCanceledException;
 import com.eaglesakura.util.IOUtil;
 import com.eaglesakura.util.LogUtil;
 import com.eaglesakura.util.StringUtil;
@@ -44,10 +44,20 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
      */
     protected String netDigest;
 
+    /**
+     * parseされた戻り値
+     */
+    protected T mResult;
+
     public BaseHttpConnection(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
         this.parser = parser;
         this.request = request;
         this.connector = connector;
+    }
+
+    @Override
+    public T getResult() {
+        return mResult;
     }
 
     @Override
@@ -83,7 +93,7 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
      * ネットワーク経由のInputStreamからパースを行う
      * ストリームのcloseは外部に任せる
      */
-    protected T parseFromStream(AsyncTaskResult<T> taskResult, HttpHeader respHeader, InputStream stream, ICacheWriter cacheWriter, MessageDigest digest) throws Exception {
+    protected T parseFromStream(RxTask taskResult, HttpHeader respHeader, InputStream stream, ICacheWriter cacheWriter, MessageDigest digest) throws Exception {
         // コンテンツをラップする
         // 必要に応じてファイルにキャッシュされたり、メモリに載せたりする。
         IStreamController controller = connector.getStreamController();
@@ -139,7 +149,7 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
     /**
      * キャッシュからデータをパースする
      */
-    private T tryCacheParse(AsyncTaskResult<T> taskResult) {
+    private T tryCacheParse(RxTask taskResult) {
         ICacheController controller = connector.getCacheController();
         if (controller == null) {
             return null;
@@ -167,9 +177,9 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
     /**
      * 接続を行う
      */
-    protected abstract T tryNetworkParse(AsyncTaskResult<T> result, MessageDigest digest) throws IOException, TaskException;
+    protected abstract T tryNetworkParse(RxTask result, MessageDigest digest) throws IOException, RxTaskException;
 
-    private T parseFromStream(AsyncTaskResult<T> result) throws Exception {
+    private T parseFromStream(RxTask result) throws Exception {
         RetryPolicy retryPolicy = request.getRetryPolicy();
         int tryCount = 0;
         final int MAX_RETRY;
@@ -194,9 +204,6 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
             } catch (FileNotFoundException e) {
                 // この例外はリトライしても無駄
                 throw e;
-            } catch (TaskCanceledException e) {
-                // この例外はリトライしても無駄
-                throw e;
             } catch (IOException e) {
                 // その他のIO例外はひとまずリトライくらいはできる
                 LogUtil.log("failed :: " + e.getClass().getSimpleName());
@@ -209,10 +216,10 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
             {
                 waitTimer.start();
                 // キャンセルされてない、かつウェイト時間が残っていたら眠らせる
-                while (!result.isCanceledTask() && (waitTimer.end() < waitTime)) {
+                while (!result.isCanceled() && (waitTimer.end() < waitTime)) {
                     Util.sleep(1);
                 }
-                if (result.isCanceledTask()) {
+                if (result.isCanceled()) {
                     throw new TaskCanceledException();
                 }
             }
@@ -224,19 +231,20 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
         throw new IOException("Connection Failed try : " + tryCount);
     }
 
-    @Override
-    public T doInBackground(AsyncTaskResult<T> result) throws Exception {
 
-        T parsed = tryCacheParse(result);
-        if (parsed != null) {
-            return parsed;
+    /**
+     * ネットワーク接続を行い、結果を返す
+     */
+    public void connect(RxTask task) throws Throwable {
+        mResult = tryCacheParse(task);
+        if (mResult != null) {
+            return;
         }
 
-        if (result.isCanceledTask()) {
-            return null;
+        if (task.isCanceled()) {
+            return;
         }
 
-        parsed = parseFromStream(result);
-        return parsed;
+        mResult = parseFromStream(task);
     }
 }
