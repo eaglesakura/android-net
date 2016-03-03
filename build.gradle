@@ -23,9 +23,6 @@ repositories {
 
 apply plugin: 'com.android.library'
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
-
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
