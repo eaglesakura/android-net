@@ -1,10 +1,10 @@
 package com.eaglesakura.android.net.internal;
 
 import com.eaglesakura.android.net.cache.ICacheWriter;
-import com.eaglesakura.android.rx.RxTask;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 
@@ -18,19 +18,19 @@ public class NetworkParseInputStream extends DigestInputStream {
      */
     private static final int MAX_READ_BYTES = 1024 * 4;
 
-    final RxTask mTaskResult;
+    final CallbackHolder mCallback;
 
     final ICacheWriter mCacheWriter;
 
-    public NetworkParseInputStream(InputStream stream, ICacheWriter cacheWriter, MessageDigest digest, RxTask taskResult) {
+    public NetworkParseInputStream(InputStream stream, ICacheWriter cacheWriter, MessageDigest digest, CallbackHolder callback) {
         super(stream, digest);
-        this.mTaskResult = taskResult;
+        this.mCallback = callback;
         this.mCacheWriter = cacheWriter;
     }
 
     private void throwIfCanceled() throws IOException {
-        if (mTaskResult.isCanceled()) {
-            throw new IOException("Canceled Task Stream");
+        if (mCallback.isCanceled()) {
+            throw new InterruptedIOException("task canceled");
         }
     }
 

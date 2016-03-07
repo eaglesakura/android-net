@@ -1,17 +1,14 @@
 package com.eaglesakura.android.net.internal;
 
-import com.eaglesakura.android.net.Connection;
 import com.eaglesakura.android.net.HttpHeader;
 import com.eaglesakura.android.net.NetworkConnector;
+import com.eaglesakura.android.net.Result;
 import com.eaglesakura.android.net.RetryPolicy;
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.ICacheWriter;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.android.net.stream.IStreamController;
-import com.eaglesakura.android.rx.RxTask;
-import com.eaglesakura.android.rx.error.RxTaskException;
-import com.eaglesakura.android.rx.error.TaskCanceledException;
 import com.eaglesakura.util.IOUtil;
 import com.eaglesakura.util.LogUtil;
 import com.eaglesakura.util.StringUtil;
@@ -21,12 +18,13 @@ import com.eaglesakura.util.Util;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.security.MessageDigest;
 
 /**
  * HTTP接続本体を行う
  */
-public abstract class BaseHttpConnection<T> extends Connection<T> {
+public abstract class BaseHttpResult<T> extends Result<T> {
 
     protected final RequestParser<T> parser;
 
@@ -49,7 +47,7 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
      */
     protected T mResult;
 
-    public BaseHttpConnection(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
+    public BaseHttpResult(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
         this.parser = parser;
         this.request = request;
         this.connector = connector;
@@ -93,20 +91,20 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
      * ネットワーク経由のInputStreamからパースを行う
      * ストリームのcloseは外部に任せる
      */
-    protected T parseFromStream(RxTask taskResult, HttpHeader respHeader, InputStream stream, ICacheWriter cacheWriter, MessageDigest digest) throws Exception {
+    protected T parseFromStream(CallbackHolder<T> callback, HttpHeader respHeader, InputStream stream, ICacheWriter cacheWriter, MessageDigest digest) throws Exception {
         // コンテンツをラップする
         // 必要に応じてファイルにキャッシュされたり、メモリに載せたりする。
         IStreamController controller = connector.getStreamController();
         InputStream readStream = null;
         NetworkParseInputStream parseStream = null;
         try {
-            parseStream = new NetworkParseInputStream(stream, cacheWriter, digest, taskResult);
+            parseStream = new NetworkParseInputStream(stream, cacheWriter, digest, callback);
             if (controller != null) {
                 readStream = controller.wrapStream(this, respHeader, parseStream);
             } else {
                 readStream = stream;
             }
-            T parsed = parser.parse(this, taskResult, readStream);
+            T parsed = parser.parse(this, readStream);
             return parsed;
         } finally {
             if (readStream != parseStream) {
@@ -149,7 +147,7 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
     /**
      * キャッシュからデータをパースする
      */
-    private T tryCacheParse(RxTask taskResult) {
+    private T tryCacheParse(CallbackHolder<T> taskResult) {
         ICacheController controller = connector.getCacheController();
         if (controller == null) {
             return null;
@@ -159,6 +157,10 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
         InputStream stream = null;
         try {
             stream = controller.openCache(request);
+            if (stream == null) {
+                // キャッシュが無いので何もできない
+                return null;
+            }
             T parsed = parseFromStream(taskResult, null, stream, null, newMessageDigest());
             if (parsed != null) {
                 // パースに成功したら指紋を残す
@@ -177,9 +179,16 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
     /**
      * 接続を行う
      */
-    protected abstract T tryNetworkParse(RxTask result, MessageDigest digest) throws IOException, RxTaskException;
+    protected abstract T tryNetworkParse(CallbackHolder<T> callback, MessageDigest digest) throws IOException;
 
-    private T parseFromStream(RxTask result) throws Exception {
+    /**
+     * streamから戻り値のパースを行う
+     *
+     * @param callback
+     * @return
+     * @throws Exception
+     */
+    private T parseFromStream(CallbackHolder<T> callback) throws IOException {
         RetryPolicy retryPolicy = request.getRetryPolicy();
         int tryCount = 0;
         final int MAX_RETRY;
@@ -196,7 +205,7 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
         while ((++tryCount) <= (MAX_RETRY + 1)) {
             try {
                 MessageDigest digest = newMessageDigest();
-                T parsed = tryNetworkParse(result, digest);
+                T parsed = tryNetworkParse(callback, digest);
                 if (parsed != null) {
                     netDigest = StringUtil.toHexString(digest.digest());
                     return parsed;
@@ -207,20 +216,18 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
             } catch (IOException e) {
                 // その他のIO例外はひとまずリトライくらいはできる
                 LogUtil.log("failed :: " + e.getClass().getSimpleName());
-            } catch (Exception e) {
-                // Catchしきれなかった例外は何か問題が発生している
-                throw e;
+                e.printStackTrace();
             }
 
             // 必要時間だけウェイトをかける
             {
                 waitTimer.start();
                 // キャンセルされてない、かつウェイト時間が残っていたら眠らせる
-                while (!result.isCanceled() && (waitTimer.end() < waitTime)) {
+                while (!callback.isCanceled() && (waitTimer.end() < waitTime)) {
                     Util.sleep(1);
                 }
-                if (result.isCanceled()) {
-                    throw new TaskCanceledException();
+                if (callback.isCanceled()) {
+                    throw new InterruptedIOException("task canceled");
                 }
             }
 
@@ -235,16 +242,16 @@ public abstract class BaseHttpConnection<T> extends Connection<T> {
     /**
      * ネットワーク接続を行い、結果を返す
      */
-    public void connect(RxTask task) throws Throwable {
-        mResult = tryCacheParse(task);
+    public void connect(CallbackHolder<T> callback) throws IOException {
+        mResult = tryCacheParse(callback);
         if (mResult != null) {
             return;
         }
 
-        if (task.isCanceled()) {
+        if (callback.isCanceled()) {
             return;
         }
 
-        mResult = parseFromStream(task);
+        mResult = parseFromStream(callback);
     }
 }

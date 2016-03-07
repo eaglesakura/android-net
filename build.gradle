@@ -48,20 +48,21 @@ dependencies {
         compile project(':eglibrary:android-text-kvs')
         compile project(':eglibrary:android-thread')
         compile project(':eglibrary:android-simple-utils')
-        compile project(':eglibrary:rxandroid-support')
     } else {
         compile 'com.eaglesakura:simple-utils:1.+'
         compile 'com.eaglesakura:json-wrapper:1.+'
         compile 'com.eaglesakura:android-text-kvs:1.+'
-        compile 'com.eaglesakura:android-thread:1.+'
         compile 'com.eaglesakura:android-simple-utils:1.+'
-        compile 'com.eaglesakura:rxandroid-support:1.+'
     }
 
     /**
      * Network Library
      */
     compile 'com.google.http-client:google-http-client-android:+'
+
+    // test
+    testCompile 'junit:junit:4.12'
+    testCompile "org.robolectric:robolectric:3.0"
 }
 
 apply plugin: 'maven'

@@ -17,9 +17,9 @@ public class SimpleHttpRequest extends ConnectRequest {
 
     private String encoding = "UTF-8";
 
-    private CachePolicy cachePolicy = new CachePolicy();
+    private CachePolicy mCachePolicy = new CachePolicy();
 
-    private RetryPolicy retryPolicy = new RetryPolicy(10);
+    private RetryPolicy mRetryPolicy = new RetryPolicy(10);
 
     public SimpleHttpRequest(Method method) {
         super(method);
@@ -77,12 +77,12 @@ public class SimpleHttpRequest extends ConnectRequest {
 
     @Override
     public CachePolicy getCachePolicy() {
-        return cachePolicy;
+        return mCachePolicy;
     }
 
     @Override
     public RetryPolicy getRetryPolicy() {
-        return retryPolicy;
+        return mRetryPolicy;
     }
 
     @Override

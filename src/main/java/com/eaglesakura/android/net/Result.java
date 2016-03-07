@@ -4,7 +4,7 @@ import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.util.StringUtil;
 
-public abstract class Connection<T> {
+public abstract class Result<T> {
     /**
      * キャッシュの指紋を取得する
      */
