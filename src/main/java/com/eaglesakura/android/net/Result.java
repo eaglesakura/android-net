@@ -1,24 +1,22 @@
 package com.eaglesakura.android.net;
 
-import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.util.StringUtil;
 
 public abstract class Result<T> {
     /**
      * キャッシュの指紋を取得する
+     *
+     * キャッシュから読み込まれた場合に有効となる。
      */
     public abstract String getCacheDigest();
 
     /**
      * コンテンツの指紋を取得する
+     *
+     * ダウンロードが実行された場合に有効となる
      */
     public abstract String getContentDigest();
-
-    /**
-     * キャッシュ制御を取得する
-     */
-    public abstract ICacheController getCacheController();
 
     /**
      * リクエスト情報を取得する
@@ -44,22 +42,5 @@ public abstract class Result<T> {
      */
     public boolean hasContent() {
         return getContentDigest() != null || getCacheDigest() != null;
-    }
-
-    /**
-     * コンテンツがキャッシュと切り替わっていたらtrueを返却する
-     */
-    public boolean isContentModified() {
-        String cache = getCacheDigest();
-        String content = getContentDigest();
-        if (cache == null) {
-            // キャッシュが無いなら強制的に書き換わり
-            return true;
-        } else if (content != null) {
-            // コンテンツがあるならば、指紋チェックし、一致しなければコンテンツの入れ替わりである
-            return !content.equals(cache);
-        } else {
-            return true;
-        }
     }
 }

@@ -63,7 +63,6 @@ public abstract class BaseHttpResult<T> extends Result<T> {
         return request;
     }
 
-    @Override
     public ICacheController getCacheController() {
         return connector.getCacheController();
     }
@@ -161,7 +160,7 @@ public abstract class BaseHttpResult<T> extends Result<T> {
                 // キャッシュが無いので何もできない
                 return null;
             }
-            T parsed = parseFromStream(taskResult, null, stream, null, newMessageDigest());
+            T parsed = parseFromStream(taskResult, null, stream, null, digest);
             if (parsed != null) {
                 // パースに成功したら指紋を残す
                 cacheDigest = StringUtil.toHexString(digest.digest());
@@ -183,10 +182,6 @@ public abstract class BaseHttpResult<T> extends Result<T> {
 
     /**
      * streamから戻り値のパースを行う
-     *
-     * @param callback
-     * @return
-     * @throws Exception
      */
     private T parseFromStream(CallbackHolder<T> callback) throws IOException {
         RetryPolicy retryPolicy = request.getRetryPolicy();

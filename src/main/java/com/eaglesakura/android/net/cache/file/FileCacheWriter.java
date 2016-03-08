@@ -40,7 +40,7 @@ public class FileCacheWriter implements ICacheWriter {
                 mDst.delete();
             }
             // 書き込んだファイルをdstにスワップする
-            mDst.renameTo(mSrc);
+            mSrc.renameTo(mDst);
 
             if (mSrc.isFile()) {
                 throw new IOException("Swap Failed :: " + mSrc.getAbsolutePath() + " -> " + mDst.getAbsolutePath());
