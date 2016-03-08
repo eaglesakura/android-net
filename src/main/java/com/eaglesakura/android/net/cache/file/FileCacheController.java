@@ -18,12 +18,12 @@ import java.io.InputStream;
  * 指定ディレクトリ配下でファイルとしてキャッシュを制御する
  */
 public class FileCacheController implements ICacheController {
-    File dir;
+    File mCacheDirectory;
 
-    String ext = "cache";
+    String mFileExt = "cache";
 
     public FileCacheController(File dir) throws IOException {
-        this.dir = IOUtil.mkdirs(dir);
+        this.mCacheDirectory = IOUtil.mkdirs(dir);
         if (!dir.isDirectory()) {
             throw new FileNotFoundException("Directory not found");
         }
@@ -34,13 +34,13 @@ public class FileCacheController implements ICacheController {
      * <p/>
      * 拡張子は"."を除いた文字列を指定する
      */
-    public void setExt(String ext) {
-        this.ext = ext;
+    public void setFileExt(String fileExt) {
+        this.mFileExt = fileExt;
     }
 
     private File getFile(String key) {
-        String fileName = EncodeUtil.genSHA1(key.getBytes()) + "." + ext;
-        return new File(dir, fileName);
+        String fileName = EncodeUtil.genSHA1(key.getBytes()) + "." + mFileExt;
+        return new File(mCacheDirectory, fileName);
     }
 
     @Override
@@ -51,7 +51,9 @@ public class FileCacheController implements ICacheController {
         }
 
         File local = getFile(policy.getCacheKey(request));
-        if (!local.isFile()) {
+        // 親ディレクトリを作成する
+        IOUtil.mkdirs(local.getParentFile());
+        if (!mCacheDirectory.isDirectory()) {
             return null;
         }
 
@@ -69,7 +71,7 @@ public class FileCacheController implements ICacheController {
         // キャッシュの限界時間を超えているため、ファイルを削除する
         if (System.currentTimeMillis() > (local.lastModified() + policy.getCacheLimitTimeMs())) {
             local.delete();
-            throw new FileNotFoundException();
+            return null;
         }
 
         return new FileInputStream(local);

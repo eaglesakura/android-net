@@ -81,7 +81,7 @@ public class SupportNetworkImageView extends ImageView {
         mConnector = new NetworkConnector(context);
         try {
             FileCacheController ctrl = new FileCacheController(new File(getContext().getCacheDir(), "net-img"));
-            ctrl.setExt("img");
+            ctrl.setFileExt("img");
             mConnector.setCacheController(ctrl);
         } catch (Exception e) {
             mConnector.setCacheController(null);

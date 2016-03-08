@@ -53,7 +53,7 @@ public class CachePolicy {
      * 基本的にはメソッド＋URLで生成される。
      */
     public String getCacheKey(ConnectRequest request) {
-        return String.format("%s/%s", request.getMethod().toString(), request.getUrl());
+        return String.format("%s-%s", request.getMethod().toString(), request.getUrl());
     }
 
     public static long getCacheLimitTimeMs(CachePolicy policy) {
