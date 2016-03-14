@@ -13,6 +13,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.1.+'
+        classpath 'me.tatarka:gradle-retrolambda:3.2.5' // support Lambda
     }
 }
 
@@ -22,13 +23,14 @@ repositories {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'me.tatarka.retrolambda' /* Android Lambda */
 
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
@@ -48,11 +50,15 @@ dependencies {
         compile project(':eglibrary:android-text-kvs')
         compile project(':eglibrary:android-thread')
         compile project(':eglibrary:android-simple-utils')
+
+        androidTestCompile project(":eglibrary:android-devicetest-support")
     } else {
         compile 'com.eaglesakura:simple-utils:1.+'
         compile 'com.eaglesakura:json-wrapper:1.+'
         compile 'com.eaglesakura:android-text-kvs:1.+'
         compile 'com.eaglesakura:android-simple-utils:1.+'
+
+        androidTestCompile 'com.eaglesakura:android-devicetest-support:1.+'
     }
 
     /**
