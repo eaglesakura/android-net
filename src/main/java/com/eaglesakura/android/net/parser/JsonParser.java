@@ -1,7 +1,6 @@
 package com.eaglesakura.android.net.parser;
 
-import com.eaglesakura.android.net.Connection;
-import com.eaglesakura.android.rx.RxTask;
+import com.eaglesakura.android.net.Result;
 import com.eaglesakura.json.JSON;
 
 import java.io.InputStream;
@@ -14,7 +13,7 @@ public class JsonParser<T> implements RequestParser<T> {
     }
 
     @Override
-    public T parse(Connection<T> sender, RxTask task, InputStream data) throws Exception {
+    public T parse(Result<T> sender, InputStream data) throws Exception {
         return JSON.decode(data, clazz);
     }
 }

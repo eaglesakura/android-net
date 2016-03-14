@@ -1,5 +1,13 @@
 package com.eaglesakura.android.net.internal;
 
+import com.eaglesakura.android.net.HttpHeader;
+import com.eaglesakura.android.net.NetworkConnector;
+import com.eaglesakura.android.net.cache.ICacheWriter;
+import com.eaglesakura.android.net.parser.RequestParser;
+import com.eaglesakura.android.net.request.ConnectContent;
+import com.eaglesakura.android.net.request.ConnectRequest;
+import com.eaglesakura.util.IOUtil;
+import com.eaglesakura.util.LogUtil;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -9,21 +17,10 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpStatusCodes;
 
-import com.eaglesakura.android.net.HttpHeader;
-import com.eaglesakura.android.net.NetworkConnector;
-import com.eaglesakura.android.net.cache.ICacheWriter;
-import com.eaglesakura.android.net.parser.RequestParser;
-import com.eaglesakura.android.net.request.ConnectContent;
-import com.eaglesakura.android.net.request.ConnectRequest;
-import com.eaglesakura.android.rx.RxTask;
-import com.eaglesakura.android.rx.error.RxTaskException;
-import com.eaglesakura.android.rx.error.TaskCanceledException;
-import com.eaglesakura.util.IOUtil;
-import com.eaglesakura.util.LogUtil;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.Iterator;
@@ -32,10 +29,10 @@ import java.util.Map;
 /**
  * Google Http Clientで接続試行を行う
  */
-public class GoogleHttpClientConnectImpl<T> extends BaseHttpConnection<T> {
+public class GoogleHttpClientResultImpl<T> extends BaseHttpResult<T> {
     static HttpRequestFactory requestFactory = AndroidHttp.newCompatibleTransport().createRequestFactory();
 
-    public GoogleHttpClientConnectImpl(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
+    public GoogleHttpClientResultImpl(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
         super(connector, request, parser);
     }
 
@@ -147,7 +144,7 @@ public class GoogleHttpClientConnectImpl<T> extends BaseHttpConnection<T> {
     }
 
     @Override
-    protected T tryNetworkParse(RxTask taskResult, MessageDigest digest) throws IOException, RxTaskException {
+    protected T tryNetworkParse(CallbackHolder<T> callback, MessageDigest digest) throws IOException {
         HttpRequest req;
         HttpResponse resp = null;
         InputStream readContent = null;
@@ -166,8 +163,8 @@ public class GoogleHttpClientConnectImpl<T> extends BaseHttpConnection<T> {
             respHeader = wrapHeader(resp.getHeaders());
             final int status = resp.getStatusCode();
 
-            if (taskResult.isCanceled()) {
-                throw new TaskCanceledException();
+            if (callback.isCanceled()) {
+                throw new InterruptedIOException("task canceled");
             }
 
             if (status == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
@@ -181,7 +178,7 @@ public class GoogleHttpClientConnectImpl<T> extends BaseHttpConnection<T> {
 
             // コンテンツのパースを行わせる
             try {
-                result = parseFromStream(taskResult, respHeader, readContent, cacheWriter, digest);
+                result = parseFromStream(callback, respHeader, readContent, cacheWriter, digest);
                 return result;
             } catch (IOException e) {
                 throw e;

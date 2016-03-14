@@ -11,22 +11,22 @@ import java.io.IOException;
  * ファイルに直接キャッシュを書き込む
  */
 public class FileCacheWriter implements ICacheWriter {
-    final File file;
+    final File mDst;
 
-    final File temp;
+    final File mSrc;
 
-    final FileOutputStream stream;
+    final FileOutputStream mStream;
 
     public FileCacheWriter(File file) throws IOException {
         IOUtil.mkdirs(file.getParentFile());
-        this.file = file;
-        this.temp = new File(file.getAbsolutePath() + "." + System.currentTimeMillis());
-        this.stream = new FileOutputStream(temp);
+        this.mDst = file;
+        this.mSrc = new File(file.getAbsolutePath() + "." + System.currentTimeMillis());
+        this.mStream = new FileOutputStream(mSrc);
     }
 
     @Override
     public void write(byte[] buffer, int offset, int length) throws IOException {
-        stream.write(buffer, offset, length);
+        mStream.write(buffer, offset, length);
     }
 
     /**
@@ -34,11 +34,21 @@ public class FileCacheWriter implements ICacheWriter {
      */
     @Override
     public void commit() throws IOException {
-        stream.close();
-        if (file.isFile()) {
-            file.delete();
+        if (IOUtil.close(mStream)) {
+            if (mDst.isFile()) {
+                // 既にファイルがある場合は削除する
+                mDst.delete();
+            }
+            // 書き込んだファイルをdstにスワップする
+            mSrc.renameTo(mDst);
+
+            if (mSrc.isFile()) {
+                throw new IOException("Swap Failed :: " + mSrc.getAbsolutePath() + " -> " + mDst.getAbsolutePath());
+            }
+        } else {
+            // closeに失敗したから、書き込みが行えなかった
+            throw new IOException("File Close Filed :: " + mSrc.getAbsolutePath());
         }
-        file.renameTo(temp);
     }
 
     /**
@@ -46,8 +56,8 @@ public class FileCacheWriter implements ICacheWriter {
      */
     @Override
     public void abort() throws IOException {
-        IOUtil.close(stream);
-        temp.delete();
+        IOUtil.close(mStream);
+        mSrc.delete();
     }
 
     @Override

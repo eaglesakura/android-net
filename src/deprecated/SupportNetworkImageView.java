@@ -1,8 +1,16 @@
 package com.eaglesakura.android.widget;
 
-import com.eaglesakura.android.net.Connection;
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.util.AttributeSet;
+import android.widget.ImageView;
+
 import com.eaglesakura.android.net.NetworkConnector;
 import com.eaglesakura.android.net.R;
+import com.eaglesakura.android.net.Result;
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.file.FileCacheController;
 import com.eaglesakura.android.net.parser.RequestParser;
@@ -12,14 +20,6 @@ import com.eaglesakura.android.rx.LifecycleState;
 import com.eaglesakura.android.rx.RxTask;
 import com.eaglesakura.android.rx.SubscriptionController;
 import com.eaglesakura.util.LogUtil;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.util.AttributeSet;
-import android.widget.ImageView;
 
 import java.io.File;
 
@@ -33,7 +33,7 @@ public class SupportNetworkImageView extends ImageView {
 
     protected NetworkConnector mConnector;
 
-    protected RxTask<Connection<Bitmap>> imageResult;
+    protected RxTask<Result<Bitmap>> imageResult;
 
     /**
      * ダウンロード失敗時に表示する画像
@@ -81,7 +81,7 @@ public class SupportNetworkImageView extends ImageView {
         mConnector = new NetworkConnector(context);
         try {
             FileCacheController ctrl = new FileCacheController(new File(getContext().getCacheDir(), "net-img"));
-            ctrl.setExt("img");
+            ctrl.setFileExt("img");
             mConnector.setCacheController(ctrl);
         } catch (Exception e) {
             mConnector.setCacheController(null);
@@ -154,9 +154,9 @@ public class SupportNetworkImageView extends ImageView {
                         return task != imageResult;
                     }
                 })
-                .completed(new RxTask.Action1<Connection<Bitmap>>() {
+                .completed(new RxTask.Action1<Result<Bitmap>>() {
                     @Override
-                    public void call(Connection<Bitmap> it, RxTask<Connection<Bitmap>> task) {
+                    public void call(Result<Bitmap> it, RxTask<Result<Bitmap>> task) {
                         if (task == imageResult) {
                             try {
                                 onReceivedImage(it.getResult());
@@ -165,19 +165,19 @@ public class SupportNetworkImageView extends ImageView {
                             }
                         }
                     }
-                }).canceled(new RxTask.Action0<Connection<Bitmap>>() {
+                }).canceled(new RxTask.Action0<Result<Bitmap>>() {
                     @Override
-                    public void call(RxTask<Connection<Bitmap>> task) {
+                    public void call(RxTask<Result<Bitmap>> task) {
                         onImageLoadError();
                     }
-                }).failed(new RxTask.ErrorAction<Connection<Bitmap>>() {
+                }).failed(new RxTask.ErrorAction<Result<Bitmap>>() {
                     @Override
-                    public void call(Throwable it, RxTask<Connection<Bitmap>> task) {
+                    public void call(Throwable it, RxTask<Result<Bitmap>> task) {
                         onImageLoadError();
                     }
-                }).finalized(new RxTask.Action0<Connection<Bitmap>>() {
+                }).finalized(new RxTask.Action0<Result<Bitmap>>() {
                     @Override
-                    public void call(RxTask<Connection<Bitmap>> task) {
+                    public void call(RxTask<Result<Bitmap>> task) {
                         imageResult = null;
                     }
                 }).start();

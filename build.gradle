@@ -12,7 +12,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
+        classpath 'com.android.tools.build:gradle:2.1.+'
+        classpath 'me.tatarka:gradle-retrolambda:3.2.5' // support Lambda
     }
 }
 
@@ -22,20 +23,48 @@ repositories {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'me.tatarka.retrolambda' /* Android Lambda */
 
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
     defaultConfig {
         minSdkVersion 10
         targetSdkVersion 23
     }
+
+    lintOptions {
+        disable "InvalidPackage"
+    }
 }
+
+/**
+ * UnitTest & retro lambda
+ */
+tasks.withType(Test) {
+    project.tasks
+            .findAll {
+        task -> (task.name ==~ /compile.*?TestJava.*?/)
+    }
+    .each { task ->
+        task.doFirst {
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
+        }
+    }
+}
+
 // Local or maven
 if (!hasProperty("EGLIBRARY_COMPILE_LOCAL")) {
     ext.EGLIBRARY_COMPILE_LOCAL = false
 }
+
 dependencies {
     if (EGLIBRARY_COMPILE_LOCAL) {
         compile project(':eglibrary:simple-utils')
@@ -43,20 +72,25 @@ dependencies {
         compile project(':eglibrary:android-text-kvs')
         compile project(':eglibrary:android-thread')
         compile project(':eglibrary:android-simple-utils')
-        compile project(':eglibrary:rxandroid-support')
+
+        androidTestCompile project(":eglibrary:android-devicetest-support")
     } else {
         compile 'com.eaglesakura:simple-utils:1.+'
         compile 'com.eaglesakura:json-wrapper:1.+'
         compile 'com.eaglesakura:android-text-kvs:1.+'
-        compile 'com.eaglesakura:android-thread:1.+'
         compile 'com.eaglesakura:android-simple-utils:1.+'
-        compile 'com.eaglesakura:rxandroid-support:1.+'
+
+        androidTestCompile 'com.eaglesakura:android-devicetest-support:1.+'
     }
 
     /**
      * Network Library
      */
-    compile 'com.google.http-client:google-http-client-android:+'
+    compile 'com.google.http-client:google-http-client-android:1.+'
+
+    // test
+    testCompile 'junit:junit:4.12'
+    testCompile "org.robolectric:robolectric:3.0"
 }
 
 apply plugin: 'maven'
@@ -76,8 +110,13 @@ android.libraryVariants.all { variant ->
         description "Generates Android Javadoc for $variant.name."
         source = variant.javaCompile.source
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
-        classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar) + files("build/intermediates/classes/${variant.name}/")
-        options.links("http://docs.oracle.com/javase/7/docs/api/");
+
+        classpath = files(variant.javaCompile.classpath.files) +
+                files(ext.androidJar) +
+                files("build/intermediates/classes/${variant.name}/") +
+                fileTree("build/intermediates/exploded-aar").include("**/*.jar")
+
+        options.links("http://docs.oracle.com/javase/8/docs/api/");
         options.links("http://d.android.com/reference/");
         exclude '**/BuildConfig.java'
         exclude '**/*Dao.java' /* ignore greenDAO */
@@ -85,6 +124,7 @@ android.libraryVariants.all { variant ->
         exclude '**/DaoSession.java' /* ignore greenDAO */
         exclude '**/R.java' /* ignore greenDAO */
 
+        options.addStringOption('Xdoclint:none', '-quiet')
         options.encoding = "UTF-8"
         project.configure(options) {
             memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PROTECTED
@@ -172,4 +212,3 @@ def getArtifactInstallTarget() {
         return file("ci-release");
     }
 }
-

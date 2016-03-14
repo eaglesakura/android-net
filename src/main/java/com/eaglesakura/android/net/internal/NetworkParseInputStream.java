@@ -1,10 +1,10 @@
 package com.eaglesakura.android.net.internal;
 
 import com.eaglesakura.android.net.cache.ICacheWriter;
-import com.eaglesakura.android.rx.RxTask;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 
@@ -18,19 +18,19 @@ public class NetworkParseInputStream extends DigestInputStream {
      */
     private static final int MAX_READ_BYTES = 1024 * 4;
 
-    final RxTask mTaskResult;
+    final CallbackHolder mCallback;
 
     final ICacheWriter mCacheWriter;
 
-    public NetworkParseInputStream(InputStream stream, ICacheWriter cacheWriter, MessageDigest digest, RxTask taskResult) {
+    public NetworkParseInputStream(InputStream stream, ICacheWriter cacheWriter, MessageDigest digest, CallbackHolder callback) {
         super(stream, digest);
-        this.mTaskResult = taskResult;
+        this.mCallback = callback;
         this.mCacheWriter = cacheWriter;
     }
 
     private void throwIfCanceled() throws IOException {
-        if (mTaskResult.isCanceled()) {
-            throw new IOException("Canceled Task Stream");
+        if (mCallback.isCanceled()) {
+            throw new InterruptedIOException("task canceled");
         }
     }
 
@@ -44,10 +44,9 @@ public class NetworkParseInputStream extends DigestInputStream {
 
     @Override
     public int read() throws IOException {
-        throwIfCanceled();
-        int result = in.read();
-        mCacheWriter.write(new byte[]{(byte) result}, 0, 1);
-        return result;
+        byte[] buf = new byte[1];
+        read(buf, 0, 1);
+        return ((int) buf[0]) & 0x000000FF;
     }
 
     @Override
@@ -62,7 +61,7 @@ public class NetworkParseInputStream extends DigestInputStream {
         // キャンセルチェックを容易にするため、一度の取得を小さく保つ
         byteCount = Math.min(MAX_READ_BYTES, byteCount);
 
-        int result = in.read(buffer, byteOffset, byteCount);
+        int result = super.read(buffer, byteOffset, byteCount);
         writeCache(buffer, byteOffset, result);
         return result;
     }

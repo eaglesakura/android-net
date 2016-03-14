@@ -1,26 +1,25 @@
 package com.eaglesakura.android.net.stream;
 
-import com.eaglesakura.android.net.Connection;
 import com.eaglesakura.android.net.HttpHeader;
-import com.eaglesakura.android.rx.error.RxTaskException;
+import com.eaglesakura.android.net.Result;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 /**
  * パーサーに渡すストリームを制御する。
- * <p/>
+ * <p>
  * 一度ByteArrayに変換する等、必要に応じた制御を行う。
- * <p/>
+ * <p>
  * オンメモリに乗らないキャッシュはそもそもキャッシュDBに載せられないので、ストリームコントロールと同時にキャッシュ制御も行う。
  */
 public interface IStreamController {
     /**
      * パーサーに渡すストリームを生成する。
-     * <p/>
+     * <p>
      * 内部的にByteArrayに変換する等のラップを行う。
-     * <p/>
+     * <p>
      * 内部でoriginalStreamを閉じる必要はない。
      */
-    <T> InputStream wrapStream(Connection<T> connection, HttpHeader respHeader, InputStream originalStream) throws IOException, RxTaskException;
+    <T> InputStream wrapStream(Result<T> connection, HttpHeader respHeader, InputStream originalStream) throws IOException;
 }

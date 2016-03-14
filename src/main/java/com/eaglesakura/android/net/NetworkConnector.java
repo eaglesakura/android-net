@@ -1,22 +1,25 @@
 package com.eaglesakura.android.net;
 
+import android.content.Context;
+
 import com.eaglesakura.android.net.cache.ICacheController;
+import com.eaglesakura.android.net.cache.file.FileCacheController;
 import com.eaglesakura.android.net.cache.tkvs.TextCacheController;
-import com.eaglesakura.android.net.internal.BaseHttpConnection;
-import com.eaglesakura.android.net.internal.GoogleHttpClientConnectImpl;
+import com.eaglesakura.android.net.internal.BaseHttpResult;
+import com.eaglesakura.android.net.internal.CallbackHolder;
+import com.eaglesakura.android.net.internal.GoogleHttpClientResultImpl;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
+import com.eaglesakura.android.net.stream.ByteArrayStreamController;
 import com.eaglesakura.android.net.stream.IStreamController;
 import com.eaglesakura.android.net.stream.RawStreamController;
-import com.eaglesakura.android.rx.RxTask;
-import com.eaglesakura.android.rx.RxTaskBuilder;
-import com.eaglesakura.android.rx.SubscriptionController;
 
-import android.content.Context;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * ネットワークの接続制御を行う
- * <p/>
+ * <p>
  * 通信そのものは専用スレッドで行われるため、UI/Backgroundどちらからも使用することができる。
  * 同期的に結果を得たい場合はawait()でタスク待ちを行えば良い。
  */
@@ -27,8 +30,6 @@ public class NetworkConnector {
 
     private ICacheController cacheController;
 
-    private SubscriptionController mSubscriptionController;
-
     public NetworkConnector(Context context) {
         mContext = context.getApplicationContext();
         streamController = new RawStreamController();
@@ -37,10 +38,6 @@ public class NetworkConnector {
 
     public Context getContext() {
         return mContext;
-    }
-
-    public void setSubscriptionController(SubscriptionController subscriptionController) {
-        mSubscriptionController = subscriptionController;
     }
 
     public void setStreamController(IStreamController streamController) {
@@ -60,23 +57,55 @@ public class NetworkConnector {
     }
 
     /**
-     * 外部接続を行う
+     * テキストのREST APIを利用するコネクタを生成する
      *
-     * @param subscription スレッド制御クラス
-     * @param request      通信リクエスト
-     * @param parser       通信パーサ
-     * @param <T>          戻り値の型
+     * @param context
+     * @return
+     */
+    public static NetworkConnector createRestful(Context context) {
+        NetworkConnector result = new NetworkConnector(context);
+        TextCacheController cacheController = new TextCacheController(context);
+        cacheController.setEncodeBase64(false);
+
+        result.setCacheController(cacheController);
+        result.setStreamController(new ByteArrayStreamController());
+        return result;
+    }
+
+    /**
+     * バイナリを取得するコネクタを生成する
+     *
+     * @param context
+     * @return
+     */
+    public static NetworkConnector createBinaryApi(Context context, File cacheDir) throws IOException {
+        NetworkConnector result = new NetworkConnector(context);
+        result.setCacheController(new FileCacheController(cacheDir));
+        result.setStreamController(new RawStreamController());
+        return result;
+    }
+
+    /**
+     * ネットワーク接続クラスを取得する。
+     *
+     * @param request 通信リクエスト
+     * @param parser  通信パーサ
+     * @param <T>     戻り値の型
      * @return 実行タスク
      */
-    public <T> RxTaskBuilder<Connection<T>> connect(SubscriptionController subscription, ConnectRequest request, RequestParser<T> parser) {
-        final BaseHttpConnection<T> connection = new GoogleHttpClientConnectImpl<>(this, request, parser);
+    public <T> Result<T> connect(ConnectRequest request, RequestParser<T> parser, CancelCallback<T> cancelCallback) throws IOException {
+        final BaseHttpResult<T> connection = new GoogleHttpClientResultImpl<>(this, request, parser);
+        CallbackHolder<T> holder = new CallbackHolder<>(cancelCallback, connection);
+        connection.connect(holder);
+        return connection;
+    }
 
-        return new RxTaskBuilder<Connection<T>>(subscription).async(new RxTask.Async<Connection<T>>() {
-            @Override
-            public Connection<T> call(RxTask<Connection<T>> task) throws Throwable {
-                connection.connect(task);
-                return connection;
-            }
-        });
+    public interface CancelCallback<T> {
+        /**
+         * タスクをキャンセルさせる場合はtrue
+         *
+         * @return
+         */
+        boolean isCanceled(Result<T> connection);
     }
 }

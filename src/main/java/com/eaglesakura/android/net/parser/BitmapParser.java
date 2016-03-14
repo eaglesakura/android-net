@@ -1,10 +1,9 @@
 package com.eaglesakura.android.net.parser;
 
-import com.eaglesakura.android.net.Connection;
-import com.eaglesakura.android.rx.RxTask;
-import com.eaglesakura.android.util.ImageUtil;
-
 import android.graphics.Bitmap;
+
+import com.eaglesakura.android.net.Result;
+import com.eaglesakura.android.util.ImageUtil;
 
 import java.io.InputStream;
 
@@ -21,7 +20,7 @@ public class BitmapParser implements RequestParser<Bitmap> {
     }
 
     @Override
-    public Bitmap parse(Connection<Bitmap> sender, RxTask task, InputStream data) throws Exception {
+    public Bitmap parse(Result<Bitmap> sender, InputStream data) throws Exception {
         Bitmap bitmap = ImageUtil.decode(data);
         if (maxWidth > 0 && maxHeight > 0) {
             Bitmap scaled = ImageUtil.toScaledImage(bitmap, maxWidth, maxHeight);
