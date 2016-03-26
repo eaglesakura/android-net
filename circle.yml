@@ -24,17 +24,15 @@ dependencies:
     - ./gradlew dependencies
 test:
   override:
-    - echo "Skip test task"
+    - ./script/test.sh
 deployment:
   canary:
     branch: /^v[0-9]\..*$/
     commands:
       - git clone git@github.com:eaglesakura/maven.git
-#      - ./script/test.sh
       - ./script/deploy.sh
       - ./script/circle-maven-commit.sh
   develop:
     branch: develop
     commands:
-#      - ./script/test.sh
       - ./script/deploy.sh
