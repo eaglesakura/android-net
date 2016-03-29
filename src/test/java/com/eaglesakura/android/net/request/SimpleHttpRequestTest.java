@@ -1,6 +1,6 @@
 package com.eaglesakura.android.net.request;
 
-import com.eaglesakura.android.net.CiJUnitTester;
+import com.eaglesakura.android.net.UnitTestCase;
 
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-public class SimpleHttpRequestTest extends CiJUnitTester {
+public class SimpleHttpRequestTest extends UnitTestCase {
 
     @Test
     public void get用URLを構築する() throws Exception {
