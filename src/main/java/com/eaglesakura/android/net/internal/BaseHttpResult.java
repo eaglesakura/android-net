@@ -210,7 +210,6 @@ public abstract class BaseHttpResult<T> extends Result<T> {
                 throw e;
             } catch (IOException e) {
                 // その他のIO例外はひとまずリトライくらいはできる
-                LogUtil.log("failed :: " + e.getClass().getSimpleName());
                 e.printStackTrace();
             }
 

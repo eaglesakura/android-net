@@ -8,6 +8,7 @@ import com.eaglesakura.android.net.request.ConnectContent;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.util.IOUtil;
 import com.eaglesakura.util.LogUtil;
+
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -184,10 +185,6 @@ public class GoogleHttpClientResultImpl<T> extends BaseHttpResult<T> {
                 throw e;
             } catch (Exception e) {
                 throw new IllegalStateException(e);
-            } finally {
-                if (result == null) {
-                    LogUtil.log("parse failed");
-                }
             }
         } finally {
             IOUtil.close(readContent);
