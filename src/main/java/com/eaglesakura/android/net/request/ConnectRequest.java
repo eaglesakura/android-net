@@ -6,11 +6,63 @@ import com.eaglesakura.android.net.cache.CachePolicy;
 
 public abstract class ConnectRequest {
     public enum Method {
-        GET,
-        POST,
-        HEAD,
-        DELETE,
-        PUT,
+        GET {
+            @Override
+            public boolean hasContent() {
+                return false;
+            }
+
+            @Override
+            public String toString() {
+                return "GET";
+            }
+        },
+        POST {
+            @Override
+            public boolean hasContent() {
+                return true;
+            }
+
+            @Override
+            public String toString() {
+                return "POST";
+            }
+        },
+        HEAD {
+            @Override
+            public boolean hasContent() {
+                return false;
+            }
+
+            @Override
+            public String toString() {
+                return "HEAD";
+            }
+        },
+        DELETE {
+            @Override
+            public boolean hasContent() {
+                return false;
+            }
+
+            @Override
+            public String toString() {
+                return "DELETE";
+            }
+        },
+        PUT {
+            @Override
+            public boolean hasContent() {
+                return true;
+            }
+
+            @Override
+            public String toString() {
+                return "PUT";
+            }
+        };
+
+        public abstract boolean hasContent();
     }
 
     private final Method method;

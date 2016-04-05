@@ -243,7 +243,7 @@ public abstract class BaseHttpResult<T> extends Result<T> {
         }
 
         if (callback.isCanceled()) {
-            return;
+            throw new InterruptedIOException();
         }
 
         mResult = parseFromStream(callback);
