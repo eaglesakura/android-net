@@ -2,6 +2,7 @@
  * 1.0.0   : release
  * 1.0.x   : Circle CIに移行
  * 1.1.x   : RxAndroidベースのスレッド処理に移行
+ * 1.1.x   : GoogleHttpClient依存を削除
  */
 def ARTIFACT_VERSION = "1.1"
 def ARTIFACT_NAME = file(".").absoluteFile.name
@@ -84,11 +85,6 @@ dependencies {
         androidTestCompile 'com.eaglesakura:android-devicetest-support:1.+'
         testCompile 'com.eaglesakura:android-unittest-support:1.+'
     }
-
-    /**
-     * Network Library
-     */
-    compile 'com.google.http-client:google-http-client-android:1.+'
 }
 
 apply plugin: 'maven'
@@ -161,14 +157,6 @@ uploadArchives {
             license {
                 name 'MIT License'
                 url "https://raw.githubusercontent.com/eaglesakura/${ARTIFACT_NAME}/master/LICENSE.txt"
-            }
-        }
-        dependencies {
-            dependency {
-                groupId = 'com.google.http-client'
-                artifactId = 'google-http-client-android'
-                version = '1.21.+'
-                scope = 'compile'
             }
         }
     }

@@ -20,6 +20,11 @@ public class FileParser implements RequestParser<File> {
      */
     int mBufferSize = 1024 * 128;
 
+    /**
+     * コールバックを行うダウンロードサイズを指定する
+     */
+    int mListingDownloadBytes = 1024 * 128;
+
     @Nullable
     ProgressListener mListener;
 
@@ -34,6 +39,10 @@ public class FileParser implements RequestParser<File> {
         mBufferSize = bufferSize;
     }
 
+    public void setListingDownloadBytes(int listingDownloadBytes) {
+        mListingDownloadBytes = listingDownloadBytes;
+    }
+
     /**
      * 経過取得用のListenerを取得する
      */
@@ -43,12 +52,16 @@ public class FileParser implements RequestParser<File> {
 
     @Override
     public File parse(Result<File> sender, InputStream data) throws Exception {
+        if (mListener != null) {
+            mListener.onDownloadStart(sender);
+        }
 
         final File TEMP_FILE = new File(mLocalFile.getAbsolutePath() + "." + RandomUtil.randShortString() + ".bin");
         TEMP_FILE.getParentFile().mkdirs();
         FileOutputStream os = new FileOutputStream(TEMP_FILE);
         boolean completed = false;
         long downloaded = 0;
+        long lastCallbackBytes = 0;
         try {
 
             byte[] buffer = new byte[mBufferSize];
@@ -58,7 +71,11 @@ public class FileParser implements RequestParser<File> {
                 os.write(buffer, 0, readed);
                 downloaded += readed;
                 if (mListener != null) {
-                    mListener.onDownload(sender, downloaded);
+                    if (downloaded > (lastCallbackBytes + mListingDownloadBytes)) {
+                        // ダウンロード境界を超えたのでコールバック
+                        lastCallbackBytes = downloaded;
+                        mListener.onDownload(sender, downloaded);
+                    }
                 }
 
             }
@@ -73,13 +90,31 @@ public class FileParser implements RequestParser<File> {
             // 一時ファイルが残っている場合、削除する
             if (!completed) {
                 TEMP_FILE.delete();
+                if (mListener != null) {
+                    mListener.onDownloadFailed(sender);
+                }
+            } else {
+                if (mListener != null) {
+                    mListener.onDownloadCompleted(sender);
+                }
             }
         }
 
         return mLocalFile;
     }
 
+    /**
+     * 進捗チェック
+     *
+     * start/failedはリトライごとに複数回呼び出される可能性がある点に注意すること。
+     */
     public interface ProgressListener {
+        void onDownloadStart(Result<File> sender);
+
         void onDownload(Result<File> sender, long completedSize);
+
+        void onDownloadFailed(Result<File> sender);
+
+        void onDownloadCompleted(Result<File> sender);
     }
 }
