@@ -3,6 +3,8 @@ package com.eaglesakura.android.net.internal;
 import com.eaglesakura.android.net.HttpHeader;
 import com.eaglesakura.android.net.NetworkConnector;
 import com.eaglesakura.android.net.cache.ICacheWriter;
+import com.eaglesakura.android.net.error.HttpAccessFailedException;
+import com.eaglesakura.android.net.error.HttpStatusException;
 import com.eaglesakura.android.net.error.InternalServerErrorException;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectContent;
@@ -136,13 +138,13 @@ public class AndroidHttpClientResultImpl<T> extends BaseHttpResult<T> {
                 throw new InterruptedIOException("task canceled");
             }
 
-            if (RESP_CODE == 404) {
-                throw new FileNotFoundException("Status Code == 404");
+            if (RESP_CODE == 404 || RESP_CODE == 403) {
+                throw new HttpAccessFailedException("Status Code == " + RESP_CODE, RESP_CODE);
             } else if ((RESP_CODE / 100) == 5) {
-                throw new InternalServerErrorException("InternalServerError :: " + RESP_CODE);
+                throw new InternalServerErrorException("InternalServerError :: " + RESP_CODE, RESP_CODE);
             } else if ((RESP_CODE / 100) != 2) {
                 // その他、2xx以外のステータスコードはエラーとなる
-                throw new IOException("Resp != 2xx [" + RESP_CODE + "]");
+                throw new HttpStatusException("Resp != 2xx [" + RESP_CODE + "]", RESP_CODE);
             }
 
             respHeader = newResponceHeader(connection);
