@@ -19,4 +19,8 @@ public class HttpStatusException extends IOException {
         super(cause);
         mStatusCode = statusCode;
     }
+
+    public int getStatusCode() {
+        return mStatusCode;
+    }
 }
