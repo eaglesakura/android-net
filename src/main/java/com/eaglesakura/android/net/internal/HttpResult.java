@@ -6,6 +6,7 @@ import com.eaglesakura.android.net.Result;
 import com.eaglesakura.android.net.RetryPolicy;
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.ICacheWriter;
+import com.eaglesakura.android.net.error.HttpAccessFailedException;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.android.net.stream.IStreamController;
@@ -15,7 +16,8 @@ import com.eaglesakura.util.StringUtil;
 import com.eaglesakura.util.Timer;
 import com.eaglesakura.util.Util;
 
-import java.io.FileNotFoundException;
+import android.support.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -24,33 +26,38 @@ import java.security.MessageDigest;
 /**
  * HTTP接続本体を行う
  */
-public abstract class BaseHttpResult<T> extends Result<T> {
+public abstract class HttpResult<T> extends Result<T> {
 
-    protected final RequestParser<T> parser;
+    protected final RequestParser<T> mParser;
 
-    protected final ConnectRequest request;
+    protected final ConnectRequest mRequest;
 
-    protected final NetworkConnector connector;
+    protected final NetworkConnector mConnector;
 
     /**
      * キャッシュから生成されたダイジェスト
      */
-    protected String cacheDigest;
+    protected String mCacheDigest;
 
     /**
      * ネットワークから生成されたダイジェスト
      */
-    protected String netDigest;
+    protected String mNetDigest;
+
+    /**
+     * ヘッダ戻り値
+     */
+    protected HttpHeader mResponceHeader;
 
     /**
      * parseされた戻り値
      */
     protected T mResult;
 
-    public BaseHttpResult(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
-        this.parser = parser;
-        this.request = request;
-        this.connector = connector;
+    public HttpResult(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
+        this.mParser = parser;
+        this.mRequest = request;
+        this.mConnector = connector;
     }
 
     @Override
@@ -60,21 +67,21 @@ public abstract class BaseHttpResult<T> extends Result<T> {
 
     @Override
     public ConnectRequest getRequest() {
-        return request;
+        return mRequest;
     }
 
     public ICacheController getCacheController() {
-        return connector.getCacheController();
+        return mConnector.getCacheController();
     }
 
     @Override
     public String getCacheDigest() {
-        return cacheDigest;
+        return mCacheDigest;
     }
 
     @Override
     public String getContentDigest() {
-        return netDigest;
+        return mNetDigest;
     }
 
     protected MessageDigest newMessageDigest() {
@@ -93,7 +100,7 @@ public abstract class BaseHttpResult<T> extends Result<T> {
     protected T parseFromStream(CallbackHolder<T> callback, HttpHeader respHeader, InputStream stream, ICacheWriter cacheWriter, MessageDigest digest) throws Exception {
         // コンテンツをラップする
         // 必要に応じてファイルにキャッシュされたり、メモリに載せたりする。
-        IStreamController controller = connector.getStreamController();
+        IStreamController controller = mConnector.getStreamController();
         InputStream readStream = null;
         NetworkParseInputStream parseStream = null;
         try {
@@ -103,7 +110,7 @@ public abstract class BaseHttpResult<T> extends Result<T> {
             } else {
                 readStream = stream;
             }
-            T parsed = parser.parse(this, readStream);
+            T parsed = mParser.parse(this, readStream);
             return parsed;
         } finally {
             if (readStream != parseStream) {
@@ -115,9 +122,9 @@ public abstract class BaseHttpResult<T> extends Result<T> {
 
     protected ICacheWriter newCacheWriter(HttpHeader header) {
         try {
-            ICacheController controller = connector.getCacheController();
+            ICacheController controller = mConnector.getCacheController();
             if (controller != null) {
-                return controller.newCacheWriter(request, header);
+                return controller.newCacheWriter(mRequest, header);
             }
         } catch (Exception e) {
         }
@@ -147,7 +154,7 @@ public abstract class BaseHttpResult<T> extends Result<T> {
      * キャッシュからデータをパースする
      */
     private T tryCacheParse(CallbackHolder<T> taskResult) {
-        ICacheController controller = connector.getCacheController();
+        ICacheController controller = mConnector.getCacheController();
         if (controller == null) {
             return null;
         }
@@ -155,7 +162,7 @@ public abstract class BaseHttpResult<T> extends Result<T> {
         MessageDigest digest = newMessageDigest();
         InputStream stream = null;
         try {
-            stream = controller.openCache(request);
+            stream = controller.openCache(mRequest);
             if (stream == null) {
                 // キャッシュが無いので何もできない
                 return null;
@@ -163,7 +170,7 @@ public abstract class BaseHttpResult<T> extends Result<T> {
             T parsed = parseFromStream(taskResult, null, stream, null, digest);
             if (parsed != null) {
                 // パースに成功したら指紋を残す
-                cacheDigest = StringUtil.toHexString(digest.digest());
+                mCacheDigest = StringUtil.toHexString(digest.digest());
             }
             return parsed;
         } catch (Exception e) {
@@ -180,11 +187,17 @@ public abstract class BaseHttpResult<T> extends Result<T> {
      */
     protected abstract T tryNetworkParse(CallbackHolder<T> callback, MessageDigest digest) throws IOException;
 
+    @Nullable
+    @Override
+    public HttpHeader getResponceHeader() {
+        return mResponceHeader;
+    }
+
     /**
      * streamから戻り値のパースを行う
      */
     private T parseFromStream(CallbackHolder<T> callback) throws IOException {
-        RetryPolicy retryPolicy = request.getRetryPolicy();
+        RetryPolicy retryPolicy = mRequest.getRetryPolicy();
         int tryCount = 0;
         final int MAX_RETRY;
         long waitTime = 0;
@@ -199,13 +212,14 @@ public abstract class BaseHttpResult<T> extends Result<T> {
         // 施行回数が残っていたら通信を行う
         while ((++tryCount) <= (MAX_RETRY + 1)) {
             try {
+                mResponceHeader = new HttpHeader();
                 MessageDigest digest = newMessageDigest();
                 T parsed = tryNetworkParse(callback, digest);
                 if (parsed != null) {
-                    netDigest = StringUtil.toHexString(digest.digest());
+                    mNetDigest = StringUtil.toHexString(digest.digest());
                     return parsed;
                 }
-            } catch (FileNotFoundException e) {
+            } catch (HttpAccessFailedException e) {
                 // この例外はリトライしても無駄
                 throw e;
             } catch (IOException e) {
@@ -229,7 +243,7 @@ public abstract class BaseHttpResult<T> extends Result<T> {
             waitTime = retryPolicy.nextBackoffTimeMs(tryCount, waitTime);
         }
 
-        throw new IOException("Connection Failed try : " + tryCount);
+        throw new IOException("Connection Failed try : " + (tryCount - 1) + " : " + getRequest().getUrl());
     }
 
 

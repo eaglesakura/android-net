@@ -3,6 +3,8 @@ package com.eaglesakura.android.net.internal;
 import com.eaglesakura.android.net.HttpHeader;
 import com.eaglesakura.android.net.NetworkConnector;
 import com.eaglesakura.android.net.cache.ICacheWriter;
+import com.eaglesakura.android.net.error.HttpAccessFailedException;
+import com.eaglesakura.android.net.error.HttpStatusException;
 import com.eaglesakura.android.net.error.InternalServerErrorException;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectContent;
@@ -11,11 +13,11 @@ import com.eaglesakura.util.CollectionUtil;
 import com.eaglesakura.util.IOUtil;
 import com.eaglesakura.util.StringUtil;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
@@ -23,7 +25,8 @@ import java.security.MessageDigest;
 /**
  * HttpUrlConnectionで接続試行を行う
  */
-public class AndroidHttpClientResultImpl<T> extends BaseHttpResult<T> {
+public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
+
     public AndroidHttpClientResultImpl(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
         super(connector, request, parser);
     }
@@ -39,18 +42,18 @@ public class AndroidHttpClientResultImpl<T> extends BaseHttpResult<T> {
     }
 
     private void setRequestHeaders(HttpURLConnection connection) throws Throwable {
-        CollectionUtil.each(request.getHeader().getValues(), (key, value) -> {
-            connection.addRequestProperty(key, value);
+        CollectionUtil.each(mRequest.getHeader().listHeaderKeyValues(), it -> {
+            connection.addRequestProperty(it.first, it.second);
         });
     }
 
     private void writeContents(CallbackHolder<T> callback, HttpURLConnection connection) throws IOException {
-        if (!request.getMethod().hasContent()) {
+        if (!mRequest.getMethod().hasContent()) {
             // メソッドによっては不要である
             return;
         }
 
-        ConnectContent content = request.getContent();
+        ConnectContent content = mRequest.getContent();
         long length = content.getLength();
         if (length <= 0) {
             // no content
@@ -96,33 +99,35 @@ public class AndroidHttpClientResultImpl<T> extends BaseHttpResult<T> {
         }
     }
 
-    private HttpHeader newResponceHeader(HttpURLConnection connection) throws Throwable {
-        final HttpHeader result = new HttpHeader();
+    /**
+     * ヘッダを解析する
+     */
+    private void parseResponceHeader(HttpURLConnection connection) throws Throwable {
         CollectionUtil.each(connection.getHeaderFields(), (key, value) -> {
             if (CollectionUtil.isEmpty(value)) {
                 return;
             }
-            result.put(key, value.get(0));
+            for (String it : value) {
+                mResponceHeader.put(key, it);
+            }
         });
-        return result;
     }
 
     @Override
     protected T tryNetworkParse(CallbackHolder<T> callback, MessageDigest digest) throws IOException {
 
-        URL url = new URL(request.getUrl());
+        URL url = new URL(mRequest.getUrl());
         HttpURLConnection connection = null;
         InputStream readContent = null;
         ICacheWriter cacheWriter = null;
-        HttpHeader respHeader;
         T result = null;
 
         try {
             connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod(request.getMethod().toString());
+            connection.setRequestMethod(mRequest.getMethod().toString());
             connection.setInstanceFollowRedirects(true);
-            connection.setReadTimeout((int) request.getReadTimeoutMs());
-            connection.setConnectTimeout((int) request.getConnectTimeoutMs());
+            connection.setReadTimeout((int) mRequest.getReadTimeoutMs());
+            connection.setConnectTimeout((int) mRequest.getConnectTimeoutMs());
 
             // ヘッダを設定する
             setRequestHeaders(connection);
@@ -136,23 +141,23 @@ public class AndroidHttpClientResultImpl<T> extends BaseHttpResult<T> {
                 throw new InterruptedIOException("task canceled");
             }
 
-            if (RESP_CODE == 404) {
-                throw new FileNotFoundException("Status Code == 404");
+            if (RESP_CODE == 404 || RESP_CODE == 403) {
+                throw new HttpAccessFailedException("Status Code == " + RESP_CODE, RESP_CODE);
             } else if ((RESP_CODE / 100) == 5) {
-                throw new InternalServerErrorException("InternalServerError :: " + RESP_CODE);
+                throw new InternalServerErrorException("InternalServerError :: " + RESP_CODE, RESP_CODE);
             } else if ((RESP_CODE / 100) != 2) {
                 // その他、2xx以外のステータスコードはエラーとなる
-                throw new IOException("Resp != 2xx [" + RESP_CODE + "]");
+                throw new HttpStatusException("Resp != 2xx [" + RESP_CODE + "]", RESP_CODE);
             }
 
-            respHeader = newResponceHeader(connection);
+            parseResponceHeader(connection);
             readContent = connection.getInputStream();
 
-            cacheWriter = newCacheWriter(respHeader);
+            cacheWriter = newCacheWriter(getResponceHeader());
 
             // コンテンツのパースを行わせる
             try {
-                result = parseFromStream(callback, respHeader, readContent, cacheWriter, digest);
+                result = parseFromStream(callback, getResponceHeader(), readContent, cacheWriter, digest);
                 return result;
             } catch (IOException e) {
                 throw e;

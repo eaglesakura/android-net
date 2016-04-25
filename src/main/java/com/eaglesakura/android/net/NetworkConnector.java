@@ -4,7 +4,7 @@ import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.file.FileCacheController;
 import com.eaglesakura.android.net.cache.tkvs.TextCacheController;
 import com.eaglesakura.android.net.internal.AndroidHttpClientResultImpl;
-import com.eaglesakura.android.net.internal.BaseHttpResult;
+import com.eaglesakura.android.net.internal.HttpResult;
 import com.eaglesakura.android.net.internal.CallbackHolder;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
@@ -85,8 +85,8 @@ public class NetworkConnector {
      * @return 実行タスク
      */
     public <T> Result<T> connect(ConnectRequest request, RequestParser<T> parser, CancelCallback<T> cancelCallback) throws IOException {
-//        final BaseHttpResult<T> connection = new GoogleHttpClientResultImpl<>(this, request, parser);
-        final BaseHttpResult<T> connection = new AndroidHttpClientResultImpl<>(this, request, parser);
+//        final BaseHttpResult<T> connection = new GoogleHttpClientResultImpl<>(this, mRequest, mParser);
+        final HttpResult<T> connection = new AndroidHttpClientResultImpl<>(this, request, parser);
         CallbackHolder<T> holder = new CallbackHolder<>(cancelCallback, connection);
         connection.connect(holder);
         return connection;

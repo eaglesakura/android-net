@@ -3,12 +3,16 @@ package com.eaglesakura.android.net;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.util.StringUtil;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 public abstract class Result<T> {
     /**
      * キャッシュの指紋を取得する
      *
      * キャッシュから読み込まれた場合に有効となる。
      */
+    @Nullable
     public abstract String getCacheDigest();
 
     /**
@@ -16,12 +20,20 @@ public abstract class Result<T> {
      *
      * ダウンロードが実行された場合に有効となる
      */
+    @Nullable
     public abstract String getContentDigest();
 
     /**
      * リクエスト情報を取得する
      */
+    @NonNull
     public abstract ConnectRequest getRequest();
+
+    /**
+     * 戻り値のヘッダ情報
+     */
+    @Nullable
+    public abstract HttpHeader getResponceHeader();
 
     /**
      * parseされた戻り値を取得する
