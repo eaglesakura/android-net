@@ -1,5 +1,7 @@
 package com.eaglesakura.android.net.internal;
 
+import com.eaglesakura.android.db.DBOpenType;
+import com.eaglesakura.android.db.TextKeyValueStore;
 import com.eaglesakura.android.net.HttpHeader;
 import com.eaglesakura.android.net.NetworkConnector;
 import com.eaglesakura.android.net.cache.ICacheWriter;
@@ -13,11 +15,13 @@ import com.eaglesakura.util.CollectionUtil;
 import com.eaglesakura.util.IOUtil;
 import com.eaglesakura.util.StringUtil;
 
+import android.content.Context;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
-import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
@@ -27,8 +31,41 @@ import java.security.MessageDigest;
  */
 public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
 
+    /**
+     * 最後に受信したデータハッシュ
+     */
+    private final String mLastReceivedDigest;
+
+    private static final String DATABASE_NAME = "es_net_cache.db";
+    private static final String DATABASE_TABLE_NAME = "DIGEST_CACHE";
+
+    private final String mDigestCacheKey;
+
     public AndroidHttpClientResultImpl(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
         super(connector, request, parser);
+
+        mDigestCacheKey = "dig." + request.getCachePolicy().getCacheKey(request);
+        Context context = connector.getContext();
+        TextKeyValueStore kvs = new TextKeyValueStore(context, new File(context.getCacheDir(), DATABASE_NAME), DATABASE_TABLE_NAME);
+        try {
+            kvs.open(DBOpenType.Read);
+            mLastReceivedDigest = kvs.getOrNull(mDigestCacheKey);
+        } finally {
+            kvs.close();
+        }
+    }
+
+    @Override
+    public boolean isModified() {
+        if (!StringUtil.isEmpty(mCacheDigest)) {
+            // キャッシュから取得したらデータは変動しない
+            return false;
+        }
+        if (StringUtil.isEmpty(mLastReceivedDigest)) {
+            return true;
+        } else {
+            return !mLastReceivedDigest.equals(mNetDigest);
+        }
     }
 
     private void close(HttpURLConnection connection) {
@@ -141,7 +178,7 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
                 throw new InterruptedIOException("task canceled");
             }
 
-            if (RESP_CODE == 404 || RESP_CODE == 403) {
+            if ((RESP_CODE / 100) == 4) {
                 throw new HttpAccessFailedException("Status Code == " + RESP_CODE, RESP_CODE);
             } else if ((RESP_CODE / 100) == 5) {
                 throw new InternalServerErrorException("InternalServerError :: " + RESP_CODE, RESP_CODE);
@@ -172,6 +209,24 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
             IOUtil.close(readContent);
             close(connection);
             closeCacheWriter(result, cacheWriter);
+        }
+    }
+
+    @Override
+    public void connect(CallbackHolder<T> callback) throws IOException {
+        super.connect(callback);
+        if (!StringUtil.isEmpty(mNetDigest)) {
+            // digestを保存する
+            Context context = mConnector.getContext();
+            TextKeyValueStore kvs = new TextKeyValueStore(context, new File(context.getCacheDir(), DATABASE_NAME), DATABASE_TABLE_NAME);
+            try {
+                kvs.open(DBOpenType.Write);
+                kvs.putDirect(mDigestCacheKey, mNetDigest);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                kvs.close();
+            }
         }
     }
 }

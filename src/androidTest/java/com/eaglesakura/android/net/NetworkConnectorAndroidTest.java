@@ -36,10 +36,11 @@ public class NetworkConnectorAndroidTest extends ModuleTestCase {
             Assert.assertNotNull(connect.getResult());
 
             Bitmap image = connect.getResult();
-            Assert.assertEquals(image.getWidth(), 750);
-            Assert.assertEquals(image.getHeight(), 600);
-            Assert.assertNull(connect.getCacheDigest());
-            Assert.assertNotNull(connect.getContentDigest());
+            assertEquals(image.getWidth(), 750);
+            assertEquals(image.getHeight(), 600);
+            assertNull(connect.getCacheDigest());
+            assertNotNull(connect.getContentDigest());
+            assertTrue(connect.isModified());
 
             // キャッシュが生成されていない
             Assert.assertEquals(cacheDirectory.listFiles().length, 0);
@@ -64,14 +65,15 @@ public class NetworkConnectorAndroidTest extends ModuleTestCase {
             Assert.assertNotNull(connect.getResult());
 
             Bitmap image = connect.getResult();
-            Assert.assertTrue(connect.hasContent());
-            Assert.assertEquals(image.getWidth(), 750);
-            Assert.assertEquals(image.getHeight(), 600);
-            Assert.assertNull(connect.getCacheDigest());
-            Assert.assertNotNull(connect.getContentDigest());
+            assertTrue(connect.hasContent());
+            assertEquals(image.getWidth(), 750);
+            assertEquals(image.getHeight(), 600);
+            assertNull(connect.getCacheDigest());
+            assertNotNull(connect.getContentDigest());
+            assertTrue(connect.isModified());
 
             // キャッシュが生成されている
-            Assert.assertEquals(cacheDirectory.listFiles().length, 1);
+            assertEquals(cacheDirectory.listFiles().length, 1);
 
             // キャッシュが一致している
             String cacheMD5 = IOUtil.genMD5(cacheDirectory.listFiles()[0]);
@@ -84,12 +86,13 @@ public class NetworkConnectorAndroidTest extends ModuleTestCase {
             Assert.assertNotNull(connect.getResult());
 
             Bitmap image = connect.getResult();
-            Assert.assertEquals(image.getWidth(), 750);
-            Assert.assertEquals(image.getHeight(), 600);
+            assertEquals(image.getWidth(), 750);
+            assertEquals(image.getHeight(), 600);
+            assertFalse(connect.isModified());
 
             // キャッシュからロードされていることを確認する
-            Assert.assertNotNull(connect.getCacheDigest());
-            Assert.assertNull(connect.getContentDigest());
+            assertNotNull(connect.getCacheDigest());
+            assertNull(connect.getContentDigest());
         }
     }
 
