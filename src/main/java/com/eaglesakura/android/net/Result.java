@@ -36,6 +36,12 @@ public abstract class Result<T> {
     public abstract HttpHeader getResponceHeader();
 
     /**
+     * データが前回取得時と比較して更新されている場合trueを返却する。
+     * 初回取得時は必ずtrueとなる
+     */
+    public abstract boolean isModified();
+
+    /**
      * parseされた戻り値を取得する
      */
     public abstract T getResult();
