@@ -18,6 +18,7 @@ import com.eaglesakura.util.Util;
 
 import android.support.annotation.Nullable;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -173,9 +174,12 @@ public abstract class HttpResult<T> extends Result<T> {
                 mCacheDigest = StringUtil.toHexString(digest.digest());
             }
             return parsed;
+        } catch (FileNotFoundException e) {
+            // キャッシュが見つからない場合はログも吐かない
+            return null;
         } catch (Exception e) {
             // キャッシュ読み込み失敗は無視する
-            LogUtil.log(e);
+            e.printStackTrace();
             return null;
         } finally {
             IOUtil.close(stream);

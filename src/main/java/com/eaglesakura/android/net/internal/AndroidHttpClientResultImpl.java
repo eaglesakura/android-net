@@ -189,6 +189,7 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
 
             parseResponceHeader(connection);
             readContent = connection.getInputStream();
+//            readContent = connection.getErrorStream();
 
             cacheWriter = newCacheWriter(getResponceHeader());
 
