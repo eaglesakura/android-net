@@ -24,6 +24,10 @@ public class SimplePostRequest extends ConnectRequest {
         super(Method.POST);
     }
 
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
     /**
      * オンメモリのバッファをPOSTする
      */
