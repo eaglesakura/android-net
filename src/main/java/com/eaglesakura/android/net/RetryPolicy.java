@@ -1,12 +1,14 @@
 package com.eaglesakura.android.net;
 
+import android.support.annotation.FloatRange;
+
 /**
  * リトライ設定
  */
 public class RetryPolicy {
-    int retryNum = 10;
+    int retryNum = 3;
 
-    float backoff = 1.5f;
+    float backoff = 1.25f;
 
     long baseWaitTime = 1000;
 
@@ -35,8 +37,8 @@ public class RetryPolicy {
         return backoff;
     }
 
-    public void setBackoff(float backoff) {
-        if (backoff <= 1.0f) {
+    public void setBackoff(@FloatRange(from = 1.0) float backoff) {
+        if (backoff < 1.0f) {
             throw new IllegalArgumentException();
         }
         this.backoff = backoff;
