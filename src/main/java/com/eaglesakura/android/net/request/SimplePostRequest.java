@@ -2,12 +2,15 @@ package com.eaglesakura.android.net.request;
 
 import com.eaglesakura.android.net.RetryPolicy;
 import com.eaglesakura.android.net.cache.CachePolicy;
+import com.eaglesakura.util.EncodeUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
+import java.util.Map;
 
 public class SimplePostRequest extends ConnectRequest {
     private CachePolicy cachePolicy = new CachePolicy();
@@ -34,6 +37,24 @@ public class SimplePostRequest extends ConnectRequest {
     public void setPostBuffer(String contentType, byte[] buffer) {
         this.buffer = buffer;
         this.contentType = contentType;
+    }
+
+    /**
+     * FORM形式でkey-valueのセットを送信する
+     *
+     * UTF-8エンコーディングを使用する
+     */
+    public void setPostFormParameters(Map<String, String> values) {
+        StringBuffer buffer = new StringBuffer();
+
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            buffer.append(EncodeUtil.toUrl(entry.getKey()));
+            buffer.append("=");
+            buffer.append(EncodeUtil.toUrl(entry.getValue()));
+            buffer.append("&");
+        }
+
+        setPostBuffer("application/x-www-form-urlencoded", buffer.toString().getBytes());
     }
 
     /**
