@@ -1,5 +1,6 @@
 package com.eaglesakura.android.net.request;
 
+import com.eaglesakura.android.net.ErrorPolicy;
 import com.eaglesakura.android.net.HttpHeader;
 import com.eaglesakura.android.net.RetryPolicy;
 import com.eaglesakura.android.net.cache.CachePolicy;
@@ -130,6 +131,11 @@ public abstract class ConnectRequest {
      * nullを返却した場合、リトライ制御を行わない。
      */
     public abstract RetryPolicy getRetryPolicy();
+
+    /**
+     * エラーハンドル制御を取得する
+     */
+    public abstract ErrorPolicy getErrorPolicy();
 
     /**
      * POST時のBodyを取得する

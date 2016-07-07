@@ -27,8 +27,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'me.tatarka.retrolambda' /* Android Lambda */
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 24
+    buildToolsVersion "24"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -37,7 +37,10 @@ android {
 
     defaultConfig {
         minSdkVersion 10
-        targetSdkVersion 23
+        targetSdkVersion 24
+
+        // Device Test
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"    // JUnit4
     }
 
     lintOptions {
