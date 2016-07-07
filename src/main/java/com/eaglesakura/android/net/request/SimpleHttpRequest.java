@@ -1,5 +1,6 @@
 package com.eaglesakura.android.net.request;
 
+import com.eaglesakura.android.net.ErrorPolicy;
 import com.eaglesakura.android.net.RetryPolicy;
 import com.eaglesakura.android.net.cache.CachePolicy;
 import com.eaglesakura.util.StringUtil;
@@ -20,6 +21,8 @@ public class SimpleHttpRequest extends ConnectRequest {
     private CachePolicy mCachePolicy = new CachePolicy();
 
     private RetryPolicy mRetryPolicy = new RetryPolicy(10);
+
+    private ErrorPolicy mErrorPolicy = new ErrorPolicy();
 
     public SimpleHttpRequest(Method method) {
         super(method);
@@ -83,6 +86,11 @@ public class SimpleHttpRequest extends ConnectRequest {
     @Override
     public RetryPolicy getRetryPolicy() {
         return mRetryPolicy;
+    }
+
+    @Override
+    public ErrorPolicy getErrorPolicy() {
+        return mErrorPolicy;
     }
 
     @Override
