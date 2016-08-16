@@ -6,53 +6,63 @@ import android.support.annotation.FloatRange;
  * リトライ設定
  */
 public class RetryPolicy {
-    int retryNum = 3;
+    int mRetryNum = 3;
 
-    float backoff = 1.25f;
+    float mBackoff = 1.25f;
 
-    long baseWaitTime = 1000;
+    float mTimeoutBackoff = 2.0f;
+
+    long mBaseWaitTime = 1000;
 
     public RetryPolicy(int retryNum) {
-        this.retryNum = retryNum;
+        this.mRetryNum = retryNum;
     }
 
     public RetryPolicy(int retryNum, float backoff, long baseWaitTime) {
-        this.retryNum = retryNum;
-        this.backoff = backoff;
-        this.baseWaitTime = baseWaitTime;
+        this.mRetryNum = retryNum;
+        this.mBackoff = backoff;
+        this.mBaseWaitTime = baseWaitTime;
     }
 
     public int getRetryNum() {
-        return retryNum;
+        return mRetryNum;
     }
 
     public void setRetryNum(int retryNum) {
         if (retryNum < 0) {
             throw new IllegalArgumentException();
         }
-        this.retryNum = retryNum;
+        this.mRetryNum = retryNum;
     }
 
     public float getBackoff() {
-        return backoff;
+        return mBackoff;
+    }
+
+    public float getTimeoutBackoff() {
+        return mTimeoutBackoff;
+    }
+
+    public void setTimeoutBackoff(float timeoutBackoff) {
+        mTimeoutBackoff = timeoutBackoff;
     }
 
     public void setBackoff(@FloatRange(from = 1.0) float backoff) {
         if (backoff < 1.0f) {
             throw new IllegalArgumentException();
         }
-        this.backoff = backoff;
+        this.mBackoff = backoff;
     }
 
     public long getBaseWaitTime() {
-        return baseWaitTime;
+        return mBaseWaitTime;
     }
 
     public void setBaseWaitTime(long baseWaitTime) {
         if (baseWaitTime <= 0) {
             throw new IllegalArgumentException();
         }
-        this.baseWaitTime = baseWaitTime;
+        this.mBaseWaitTime = baseWaitTime;
     }
 
     /**
@@ -61,7 +71,7 @@ public class RetryPolicy {
     public long nextBackoffTimeMs(int retryNum, long currentBackoff) {
         float result = (float) currentBackoff;
         for (int i = 0; i < retryNum; ++i) {
-            result *= backoff;
+            result *= mBackoff;
         }
         return (long) result;
     }

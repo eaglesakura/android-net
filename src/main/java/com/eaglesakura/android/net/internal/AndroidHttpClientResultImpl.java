@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.security.MessageDigest;
 
@@ -41,9 +42,15 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
 
     private final String mDigestCacheKey;
 
+    private long mReadTimeoutMs;
+
+    private long mConnectTimeoutMs;
+
     public AndroidHttpClientResultImpl(NetworkConnector connector, ConnectRequest request, RequestParser<T> parser) {
         super(connector, request, parser);
 
+        mReadTimeoutMs = request.getReadTimeoutMs();
+        mConnectTimeoutMs = request.getConnectTimeoutMs();
         mDigestCacheKey = "dig." + request.getCachePolicy().getCacheKey(request);
         Context context = connector.getContext();
         TextKeyValueStore kvs = new TextKeyValueStore(context, new File(context.getCacheDir(), DATABASE_NAME), DATABASE_TABLE_NAME);
@@ -163,8 +170,8 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod(mRequest.getMethod().toString());
             connection.setInstanceFollowRedirects(true);
-            connection.setReadTimeout((int) mRequest.getReadTimeoutMs());
-            connection.setConnectTimeout((int) mRequest.getConnectTimeoutMs());
+            connection.setReadTimeout((int) mReadTimeoutMs);
+            connection.setConnectTimeout((int) mConnectTimeoutMs);
 
             // ヘッダを設定する
             setRequestHeaders(connection);
@@ -202,6 +209,11 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
+        } catch (SocketTimeoutException e) {
+            // タイムアウト時間が短いようなので、長くする
+            mReadTimeoutMs = (long) (mReadTimeoutMs * mRequest.getRetryPolicy().getTimeoutBackoff());
+            mConnectTimeoutMs = (long) (mConnectTimeoutMs * mRequest.getRetryPolicy().getTimeoutBackoff());
+            throw e;
         } catch (IOException e) {
             throw e;
         } catch (Throwable e) {
