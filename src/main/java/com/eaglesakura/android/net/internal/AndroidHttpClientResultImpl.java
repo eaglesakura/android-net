@@ -186,12 +186,12 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
             }
 
             if ((RESP_CODE / 100) == 4) {
-                throw new HttpAccessFailedException("Status Code == " + RESP_CODE, RESP_CODE).setErrorResponse(connection, mRequest, callback);
+                throw new HttpAccessFailedException("Status Code == " + RESP_CODE + " :: " + mRequest.getUrl(), RESP_CODE).setErrorResponse(connection, mRequest, callback);
             } else if ((RESP_CODE / 100) == 5) {
-                throw new InternalServerErrorException("InternalServerError :: " + RESP_CODE, RESP_CODE).setErrorResponse(connection, mRequest, callback);
+                throw new InternalServerErrorException("InternalServerError :: " + RESP_CODE + " :: " + mRequest.getUrl(), RESP_CODE).setErrorResponse(connection, mRequest, callback);
             } else if ((RESP_CODE / 100) != 2) {
                 // その他、2xx以外のステータスコードはエラーとなる
-                throw new HttpStatusException("Resp != 2xx [" + RESP_CODE + "]", RESP_CODE).setErrorResponse(connection, mRequest, callback);
+                throw new HttpStatusException("Resp != 2xx [" + RESP_CODE + "]" + " :: " + mRequest.getUrl(), RESP_CODE).setErrorResponse(connection, mRequest, callback);
             }
 
             parseResponceHeader(connection);
