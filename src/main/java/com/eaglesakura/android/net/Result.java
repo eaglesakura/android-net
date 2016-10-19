@@ -31,9 +31,19 @@ public abstract class Result<T> {
 
     /**
      * 戻り値のヘッダ情報
+     * 誤字のため、getResponseHeader()を使うべき。
      */
     @Nullable
-    public abstract HttpHeader getResponceHeader();
+    @Deprecated
+    public HttpHeader getResponceHeader() {
+        return getResponseHeader();
+    }
+
+    /**
+     * 戻り値のヘッダ情報
+     */
+    @Nullable
+    public abstract HttpHeader getResponseHeader();
 
     /**
      * データが前回取得時と比較して更新されている場合trueを返却する。
@@ -45,6 +55,13 @@ public abstract class Result<T> {
      * parseされた戻り値を取得する
      */
     public abstract T getResult();
+
+
+    /**
+     * 現在のネットワーク状態を取得する
+     */
+    @NonNull
+    public abstract NetworkProfile getProfile();
 
     /**
      * キャッシュを取得済みであればtrue

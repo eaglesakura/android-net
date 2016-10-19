@@ -152,7 +152,7 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
                 return;
             }
             for (String it : value) {
-                mResponceHeader.put(key, it);
+                mResponseHeader.put(key, it);
             }
         });
     }
@@ -167,6 +167,7 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
         T result = null;
 
         try {
+            mProfile.onConnectStart();
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod(mRequest.getMethod().toString());
             connection.setInstanceFollowRedirects(true);
@@ -186,28 +187,31 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
             }
 
             if ((RESP_CODE / 100) == 4) {
-                throw new HttpAccessFailedException("Status Code == " + RESP_CODE, RESP_CODE).setErrorResponse(connection, mRequest, callback);
+                throw new HttpAccessFailedException("Status Code == " + RESP_CODE + " :: " + mRequest.getUrl(), RESP_CODE).setErrorResponse(connection, mRequest, callback);
             } else if ((RESP_CODE / 100) == 5) {
-                throw new InternalServerErrorException("InternalServerError :: " + RESP_CODE, RESP_CODE).setErrorResponse(connection, mRequest, callback);
+                throw new InternalServerErrorException("InternalServerError :: " + RESP_CODE + " :: " + mRequest.getUrl(), RESP_CODE).setErrorResponse(connection, mRequest, callback);
             } else if ((RESP_CODE / 100) != 2) {
                 // その他、2xx以外のステータスコードはエラーとなる
-                throw new HttpStatusException("Resp != 2xx [" + RESP_CODE + "]", RESP_CODE).setErrorResponse(connection, mRequest, callback);
+                throw new HttpStatusException("Resp != 2xx [" + RESP_CODE + "]" + " :: " + mRequest.getUrl(), RESP_CODE).setErrorResponse(connection, mRequest, callback);
             }
 
             parseResponceHeader(connection);
             readContent = connection.getInputStream();
+            mProfile.onConnectionCompleted();
 //            readContent = connection.getErrorStream();
 
-            cacheWriter = newCacheWriter(getResponceHeader());
+            cacheWriter = newCacheWriter(getResponseHeader());
 
             // コンテンツのパースを行わせる
             try {
-                result = parseFromStream(callback, getResponceHeader(), readContent, cacheWriter, digest);
+                result = parseFromStream(callback, getResponseHeader(), readContent, cacheWriter, digest);
                 return result;
             } catch (IOException e) {
                 throw e;
             } catch (Exception e) {
                 throw new IllegalStateException(e);
+            } finally {
+                mProfile.onDownloadCompleted();
             }
         } catch (SocketTimeoutException e) {
             // タイムアウト時間が短いようなので、長くする

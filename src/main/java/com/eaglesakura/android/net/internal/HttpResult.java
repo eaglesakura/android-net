@@ -2,6 +2,7 @@ package com.eaglesakura.android.net.internal;
 
 import com.eaglesakura.android.net.HttpHeader;
 import com.eaglesakura.android.net.NetworkConnector;
+import com.eaglesakura.android.net.NetworkProfile;
 import com.eaglesakura.android.net.Result;
 import com.eaglesakura.android.net.RetryPolicy;
 import com.eaglesakura.android.net.cache.ICacheController;
@@ -11,11 +12,11 @@ import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.android.net.stream.IStreamController;
 import com.eaglesakura.util.IOUtil;
-import com.eaglesakura.util.LogUtil;
 import com.eaglesakura.util.StringUtil;
 import com.eaglesakura.util.Timer;
 import com.eaglesakura.util.Util;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.io.FileNotFoundException;
@@ -48,7 +49,9 @@ public abstract class HttpResult<T> extends Result<T> {
     /**
      * ヘッダ戻り値
      */
-    protected HttpHeader mResponceHeader;
+    protected HttpHeader mResponseHeader;
+
+    protected NetworkProfileImpl mProfile = new NetworkProfileImpl();
 
     /**
      * parseされた戻り値
@@ -73,6 +76,12 @@ public abstract class HttpResult<T> extends Result<T> {
 
     public ICacheController getCacheController() {
         return mConnector.getCacheController();
+    }
+
+    @NonNull
+    @Override
+    public NetworkProfile getProfile() {
+        return mProfile;
     }
 
     @Override
@@ -105,7 +114,7 @@ public abstract class HttpResult<T> extends Result<T> {
         InputStream readStream = null;
         NetworkParseInputStream parseStream = null;
         try {
-            parseStream = new NetworkParseInputStream(stream, cacheWriter, digest, callback);
+            parseStream = new NetworkParseInputStream(stream, mProfile, cacheWriter, digest, callback);
             if (controller != null) {
                 readStream = controller.wrapStream(this, respHeader, parseStream);
             } else {
@@ -193,8 +202,13 @@ public abstract class HttpResult<T> extends Result<T> {
 
     @Nullable
     @Override
-    public HttpHeader getResponceHeader() {
-        return mResponceHeader;
+    public HttpHeader getResponseHeader() {
+        return mResponseHeader;
+    }
+
+    @Override
+    public boolean isModified() {
+        return false;
     }
 
     /**
@@ -216,7 +230,7 @@ public abstract class HttpResult<T> extends Result<T> {
         // 施行回数が残っていたら通信を行う
         while ((++tryCount) <= (MAX_RETRY + 1)) {
             try {
-                mResponceHeader = new HttpHeader();
+                mResponseHeader = new HttpHeader();
                 MessageDigest digest = newMessageDigest();
                 T parsed = tryNetworkParse(callback, digest);
                 if (parsed != null) {
