@@ -19,7 +19,6 @@ import java.io.IOException;
 
 /**
  * ネットワークの接続制御を行う
- *
  */
 public class NetworkConnector {
     private final Context mContext;
@@ -85,7 +84,6 @@ public class NetworkConnector {
      * @return 実行タスク
      */
     public <T> Result<T> connect(ConnectRequest request, RequestParser<T> parser, CancelCallback<T> cancelCallback) throws IOException {
-//        final BaseHttpResult<T> connection = new GoogleHttpClientResultImpl<>(this, mRequest, mParser);
         final HttpResult<T> connection = new AndroidHttpClientResultImpl<>(this, request, parser);
         CallbackHolder<T> holder = new CallbackHolder<>(cancelCallback, connection);
         connection.connect(holder);

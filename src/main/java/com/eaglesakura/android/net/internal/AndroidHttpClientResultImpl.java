@@ -152,7 +152,7 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
                 return;
             }
             for (String it : value) {
-                mResponceHeader.put(key, it);
+                mResponseHeader.put(key, it);
             }
         });
     }
@@ -167,6 +167,7 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
         T result = null;
 
         try {
+            mProfile.onConnectStart();
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod(mRequest.getMethod().toString());
             connection.setInstanceFollowRedirects(true);
@@ -196,18 +197,21 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
 
             parseResponceHeader(connection);
             readContent = connection.getInputStream();
+            mProfile.onConnectionCompleted();
 //            readContent = connection.getErrorStream();
 
-            cacheWriter = newCacheWriter(getResponceHeader());
+            cacheWriter = newCacheWriter(getResponseHeader());
 
             // コンテンツのパースを行わせる
             try {
-                result = parseFromStream(callback, getResponceHeader(), readContent, cacheWriter, digest);
+                result = parseFromStream(callback, getResponseHeader(), readContent, cacheWriter, digest);
                 return result;
             } catch (IOException e) {
                 throw e;
             } catch (Exception e) {
                 throw new IllegalStateException(e);
+            } finally {
+                mProfile.onDownloadCompleted();
             }
         } catch (SocketTimeoutException e) {
             // タイムアウト時間が短いようなので、長くする

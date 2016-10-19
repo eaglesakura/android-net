@@ -22,10 +22,13 @@ public class NetworkParseInputStream extends DigestInputStream {
 
     final ICacheWriter mCacheWriter;
 
-    public NetworkParseInputStream(InputStream stream, ICacheWriter cacheWriter, MessageDigest digest, CallbackHolder callback) {
+    final NetworkProfileImpl mProfile;
+
+    public NetworkParseInputStream(InputStream stream, NetworkProfileImpl profile, ICacheWriter cacheWriter, MessageDigest digest, CallbackHolder callback) {
         super(stream, digest);
-        this.mCallback = callback;
-        this.mCacheWriter = cacheWriter;
+        mCallback = callback;
+        mCacheWriter = cacheWriter;
+        mProfile = profile;
     }
 
     private void throwIfCanceled() throws IOException {
@@ -34,7 +37,10 @@ public class NetworkParseInputStream extends DigestInputStream {
         }
     }
 
-    private void writeCache(byte[] buffer, int offset, int length) throws IOException {
+    private void onDownloadStep(byte[] buffer, int offset, int length) throws IOException {
+
+        mProfile.onDownloadStep(length);
+
         if (mCacheWriter == null || length <= 0) {
             return;
         } else {
@@ -62,7 +68,7 @@ public class NetworkParseInputStream extends DigestInputStream {
         byteCount = Math.min(MAX_READ_BYTES, byteCount);
 
         int result = super.read(buffer, byteOffset, byteCount);
-        writeCache(buffer, byteOffset, result);
+        onDownloadStep(buffer, byteOffset, result);
         return result;
     }
 
@@ -85,7 +91,7 @@ public class NetworkParseInputStream extends DigestInputStream {
         // 指定量を読み込むことでスキップ扱いとする
         while ((count = read(temp, 0, Math.min(temp.length, (int) byteCount - sumSkip))) > 0 && (sumSkip < byteCount)) {
             throwIfCanceled();
-            writeCache(temp, 0, count);
+            onDownloadStep(temp, 0, count);
             sumSkip += count;
         }
         return sumSkip;
