@@ -7,6 +7,7 @@ import com.eaglesakura.android.net.Result;
 import com.eaglesakura.android.net.RetryPolicy;
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.ICacheWriter;
+import com.eaglesakura.android.net.error.HttpAccessRetryFailedException;
 import com.eaglesakura.android.net.error.HttpAccessFailedException;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
@@ -265,7 +266,7 @@ public abstract class HttpResult<T> extends Result<T> {
             waitTime = retryPolicy.nextBackoffTimeMs(tryCount, waitTime);
         }
 
-        throw new IOException("Connection Failed try : " + (tryCount - 1) + " : " + getRequest().getUrl());
+        throw new HttpAccessRetryFailedException("Connection Failed try : " + (tryCount - 1) + " : " + getRequest().getUrl());
     }
 
 
