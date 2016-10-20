@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * HTTP接続本体を行う
@@ -227,6 +229,7 @@ public abstract class HttpResult<T> extends Result<T> {
             MAX_RETRY = 0;
         }
 
+        List<IOException> errorList = new ArrayList<>();
         Timer waitTimer = new Timer();
         // 施行回数が残っていたら通信を行う
         while ((++tryCount) <= (MAX_RETRY + 1)) {
@@ -248,6 +251,7 @@ public abstract class HttpResult<T> extends Result<T> {
                     // リトライ対象の例外ではない
                     throw e;
                 }
+                errorList.add(e);
             }
 
             // 必要時間だけウェイトをかける
@@ -266,7 +270,7 @@ public abstract class HttpResult<T> extends Result<T> {
             waitTime = retryPolicy.nextBackoffTimeMs(tryCount, waitTime);
         }
 
-        throw new HttpAccessRetryFailedException("Connection Failed try : " + (tryCount - 1) + " : " + getRequest().getUrl());
+        throw new HttpAccessRetryFailedException("Connection Failed try : " + (tryCount - 1) + " : " + getRequest().getUrl(), tryCount, errorList);
     }
 
 

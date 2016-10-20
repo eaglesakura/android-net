@@ -1,23 +1,28 @@
 package com.eaglesakura.android.net.error;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * HTTPアクセスのリトライ上限を超えた
  */
 public class HttpAccessRetryFailedException extends IOException {
-    public HttpAccessRetryFailedException() {
-    }
 
-    public HttpAccessRetryFailedException(String message) {
+    final int mTryCount;
+
+    final List<IOException> mErrorList;
+
+    public HttpAccessRetryFailedException(String message, int tryCount, List<IOException> errorList) {
         super(message);
+        mTryCount = tryCount;
+        mErrorList = errorList;
     }
 
-    public HttpAccessRetryFailedException(String message, Throwable cause) {
-        super(message, cause);
+    public int getTryCount() {
+        return mTryCount;
     }
 
-    public HttpAccessRetryFailedException(Throwable cause) {
-        super(cause);
+    public List<IOException> getErrorList() {
+        return mErrorList;
     }
 }
