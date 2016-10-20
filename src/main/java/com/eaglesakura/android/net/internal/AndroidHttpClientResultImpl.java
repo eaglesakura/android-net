@@ -146,7 +146,7 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
     /**
      * ヘッダを解析する
      */
-    private void parseResponceHeader(HttpURLConnection connection) throws Throwable {
+    private void parseResponseHeader(HttpURLConnection connection) throws Throwable {
         CollectionUtil.each(connection.getHeaderFields(), (key, value) -> {
             if (CollectionUtil.isEmpty(value)) {
                 return;
@@ -195,7 +195,7 @@ public class AndroidHttpClientResultImpl<T> extends HttpResult<T> {
                 throw new HttpStatusException("Resp != 2xx [" + RESP_CODE + "]" + " :: " + mRequest.getUrl(), RESP_CODE).setErrorResponse(connection, mRequest, callback);
             }
 
-            parseResponceHeader(connection);
+            parseResponseHeader(connection);
             readContent = connection.getInputStream();
             mProfile.onConnectionCompleted();
 //            readContent = connection.getErrorStream();
