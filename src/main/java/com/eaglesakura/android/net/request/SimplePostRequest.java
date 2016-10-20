@@ -81,6 +81,14 @@ public class SimplePostRequest extends ConnectRequest {
         return mRetryPolicy;
     }
 
+    public void setRetryPolicy(RetryPolicy retryPolicy) {
+        mRetryPolicy = retryPolicy;
+    }
+
+    public void setErrorPolicy(ErrorPolicy errorPolicy) {
+        mErrorPolicy = errorPolicy;
+    }
+
     @Override
     public ErrorPolicy getErrorPolicy() {
         return mErrorPolicy;

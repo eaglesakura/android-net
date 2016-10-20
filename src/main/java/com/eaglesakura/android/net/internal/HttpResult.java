@@ -242,7 +242,11 @@ public abstract class HttpResult<T> extends Result<T> {
                 throw e;
             } catch (IOException e) {
                 // その他のIO例外はひとまずリトライくらいはできる
-                e.printStackTrace();
+                if (!mRequest.getRetryPolicy().isRetryableError(mConnector, mRequest, e)) {
+                    e.printStackTrace();
+                    // リトライ対象の例外ではない
+                    throw e;
+                }
             }
 
             // 必要時間だけウェイトをかける

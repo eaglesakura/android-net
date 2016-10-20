@@ -1,6 +1,10 @@
 package com.eaglesakura.android.net;
 
+import com.eaglesakura.android.net.request.ConnectRequest;
+
 import android.support.annotation.FloatRange;
+
+import java.io.IOException;
 
 /**
  * リトライ設定
@@ -74,5 +78,18 @@ public class RetryPolicy {
             result *= mBackoff;
         }
         return (long) result;
+    }
+
+
+    /**
+     * エラーリトライを行う場合true
+     *
+     * @param connector connector
+     * @param request   対象リクエスト
+     * @param error     エラー内容
+     * @return リトライを行う場合true
+     */
+    public boolean isRetryableError(NetworkConnector connector, ConnectRequest request, IOException error) {
+        return true;
     }
 }
