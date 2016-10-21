@@ -1,5 +1,6 @@
 package com.eaglesakura.android.net;
 
+import com.eaglesakura.android.net.error.HttpStatusException;
 import com.eaglesakura.android.net.request.ConnectRequest;
 
 import android.support.annotation.FloatRange;
@@ -89,7 +90,8 @@ public class RetryPolicy {
      * @param error     エラー内容
      * @return リトライを行う場合true
      */
-    public boolean isRetryableError(NetworkConnector connector, ConnectRequest request, IOException error) {
-        return true;
+    public boolean isRetryableError(NetworkConnector connector, ConnectRequest request, IOException error) throws IOException {
+        // HTTPステータス異常でないなら、エラーハンドリングを行なう
+        return !(error instanceof HttpStatusException);
     }
 }
