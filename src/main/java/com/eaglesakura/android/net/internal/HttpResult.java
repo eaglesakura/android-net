@@ -8,7 +8,6 @@ import com.eaglesakura.android.net.RetryPolicy;
 import com.eaglesakura.android.net.cache.ICacheController;
 import com.eaglesakura.android.net.cache.ICacheWriter;
 import com.eaglesakura.android.net.error.HttpAccessRetryFailedException;
-import com.eaglesakura.android.net.error.HttpAccessFailedException;
 import com.eaglesakura.android.net.parser.RequestParser;
 import com.eaglesakura.android.net.request.ConnectRequest;
 import com.eaglesakura.android.net.stream.IStreamController;
@@ -241,9 +240,6 @@ public abstract class HttpResult<T> extends Result<T> {
                     mNetDigest = StringUtil.toHexString(digest.digest());
                     return parsed;
                 }
-            } catch (HttpAccessFailedException e) {
-                // この例外はリトライしても無駄
-                throw e;
             } catch (IOException e) {
                 // その他のIO例外はひとまずリトライくらいはできる
                 if (!mRequest.getRetryPolicy().isRetryableError(mConnector, mRequest, e)) {
