@@ -65,4 +65,13 @@ class NetworkProfileImpl extends NetworkProfile {
 
         return (float) (DOWNLOAD_MBITS / TURNAROUND_TIME_SEC);
     }
+
+    @Nullable
+    @Override
+    public Long getDownloadDataBytes() {
+        if (getConnectionTimeMs() == null) {
+            return null;
+        }
+        return mDownloadBytes;
+    }
 }

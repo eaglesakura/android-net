@@ -1,6 +1,7 @@
 package com.eaglesakura.android.net;
 
 import android.support.annotation.FloatRange;
+import android.support.annotation.IntRange;
 import android.support.annotation.Nullable;
 
 /**
@@ -28,4 +29,11 @@ public abstract class NetworkProfile {
      */
     @FloatRange(from = 0)
     public abstract float getNetworkSpeedMbps();
+
+    /**
+     * ダウンロードしたデータ容量を取得する
+     */
+    @Nullable
+    @IntRange(from = 0)
+    public abstract Long getDownloadDataBytes();
 }
