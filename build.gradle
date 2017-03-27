@@ -79,7 +79,6 @@ if (!hasProperty("EGLIBRARY_COMPILE_LOCAL")) {
 
 dependencies {
     if (EGLIBRARY_COMPILE_LOCAL) {
-        compile project(':eglibrary:simple-utils')
         compile project(':eglibrary:json-wrapper')
         compile project(':eglibrary:android-text-kvs')
         compile project(':eglibrary:android-simple-utils')
@@ -87,7 +86,6 @@ dependencies {
         androidTestCompile project(":eglibrary:android-devicetest-support")
         testCompile project(":eglibrary:android-unittest-support")
     } else {
-        compile "com.eaglesakura:simple-utils:1.2.562"
         compile "com.eaglesakura:json-wrapper:1.1.423"
         compile "com.eaglesakura:android-text-kvs:2.0.445"
         compile "com.eaglesakura:android-simple-utils:2.0.548"
