@@ -87,7 +87,7 @@ dependencies {
         testCompile project(":eglibrary:android-unittest-support")
     } else {
         compile "com.eaglesakura:json-wrapper:1.1.423"
-        compile "com.eaglesakura:android-text-kvs:2.0.445"
+        compile "com.eaglesakura:android-text-kvs:2.1.447"
         compile "com.eaglesakura:android-simple-utils:2.0.548"
 
         androidTestCompile "com.eaglesakura:android-devicetest-support:2.1.270"
